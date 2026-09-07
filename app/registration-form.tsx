@@ -17,13 +17,29 @@ export default function RegistrationForm() {
   const [slots, setSlots] = useState<Slot[]>([]);
   const [slotId, setSlotId] = useState('');
   const [loading, setLoading] = useState(false);
+  const [slotsLoading, setSlotsLoading] = useState(true);
+  const [slotsError, setSlotsError] = useState('');
   const [error, setError] = useState('');
 
+  async function loadSlots() {
+    setSlotsLoading(true);
+    setSlotsError('');
+    try {
+      const response = await fetch('/api/slots', { cache: 'no-store' });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || 'Servizio non disponibile');
+      if (!Array.isArray(data.slots) || data.slots.length === 0) throw new Error('Nessuna fascia disponibile');
+      setSlots(data.slots);
+    } catch {
+      setSlots([]);
+      setSlotsError('Gli orari non sono disponibili in questo momento. Riprova tra pochi secondi.');
+    } finally {
+      setSlotsLoading(false);
+    }
+  }
+
   useEffect(() => {
-    fetch('/api/slots', { cache: 'no-store' })
-      .then(r => r.json())
-      .then(data => setSlots(data.slots ?? []))
-      .catch(() => setError('Non riusciamo a caricare gli orari. Riprova tra qualche secondo.'));
+    void Promise.resolve().then(loadSlots);
   }, []);
 
   const byDay = useMemo(() => {
@@ -90,9 +106,11 @@ export default function RegistrationForm() {
         <div className="field"><label>Accompagnatori Open Day</label><select name="companions" defaultValue="0">{Array.from({length:6},(_,i)=><option value={i} key={i}>{i}</option>)}</select></div>
         <div className="field full"><label>Come hai conosciuto l'evento?</label><select name="source" defaultValue=""><option value="">Seleziona</option><option>Instagram</option><option>Facebook</option><option>Google</option><option>Passaparola</option><option>Già cliente / già visitato DAMAI</option><option>Altro</option></select></div>
         <div className="field full"><label>Note o esigenze particolari</label><textarea name="notes" placeholder="Facoltativo" /></div>
-        <div className="field full">
+        <div className="field full slots-area">
           <label>Giorno e fascia oraria di arrivo *</label>
           <p className="info">L'orario selezionato è l'orario di arrivo, non la durata della visita. La disponibilità viene aggiornata in tempo reale.</p>
+          {slotsLoading && <div className="slots-message"><strong>Caricamento disponibilità…</strong>Stiamo verificando le fasce libere.</div>}
+          {!slotsLoading && slotsError && <div className="slots-message"><strong>Disponibilità temporaneamente non caricata</strong>{slotsError}<br/><button type="button" className="retry" onClick={() => void loadSlots()}>Riprova ora</button></div>}
           {Object.entries(byDay).map(([day, daySlots]) => (
             <div key={day}>
               <div className="day-title">{formatDay(day)}</div>
@@ -107,7 +125,7 @@ export default function RegistrationForm() {
           <label className="check"><input name="marketingConsent" type="checkbox" /> <span>Acconsento a ricevere comunicazioni commerciali e aggiornamenti da DAMAI. Facoltativo.</span></label>
         </div>
         {error && <div className="field full error">{error}</div>}
-        <div className="field full"><button className="submit" disabled={loading}>{loading ? 'Registrazione in corso…' : 'Invia la registrazione'}</button></div>
+        <div className="field full"><button className="submit" disabled={loading || slotsLoading || Boolean(slotsError)}>{loading ? 'Registrazione in corso…' : slotsLoading ? 'Caricamento orari…' : 'Invia la registrazione'}</button></div>
       </div>
     </form>
   );
