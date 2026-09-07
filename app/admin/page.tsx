@@ -2,6 +2,11 @@ import { query } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
+const LEAD_STAGES = [
+  ['new','Nuovo'],['hot','Hot lead'],['potential','Potenziale'],['evaluating','In valutazione'],
+  ['follow_up','Follow up'],['long_term','Lungo termine'],['won','Convertito'],['lost','Perso'],
+] as const;
+
 type Stats = { registrations:string; people:string; checked_in:string; hot:string; marketing:string };
 type Row = {
   registration_code:string; qr_token:string; first_name:string; last_name:string; phone:string; email:string;
@@ -62,7 +67,15 @@ export default async function AdminPage() {
                   <td>{r.event_date}<br/>{r.start_time.slice(0,5)}</td>
                   <td>{1 + r.companions}</td>
                   <td><span className={`pill ${r.status === 'checked_in' ? 'ok' : ''}`}>{r.status}</span></td>
-                  <td><span className="pill">{r.lead_stage}</span></td>
+                  <td>
+                    <form method="post" action="/api/admin/lead-stage" style={{display:'flex',gap:6}}>
+                      <input type="hidden" name="code" value={r.registration_code}/>
+                      <select name="stage" defaultValue={r.lead_stage} style={{minWidth:125}}>
+                        {LEAD_STAGES.map(([value,label]) => <option key={value} value={value}>{label}</option>)}
+                      </select>
+                      <button type="submit">Salva</button>
+                    </form>
+                  </td>
                   <td><a href={`/admin/checkin/${r.qr_token}`}>{r.status === 'checked_in' ? 'Apri' : 'Registra'}</a></td>
                 </tr>
               ))}
