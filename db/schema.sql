@@ -60,8 +60,11 @@ CREATE TABLE IF NOT EXISTS communications (
   provider_message_id text,
   scheduled_for timestamptz,
   sent_at timestamptz,
+  attempts integer NOT NULL DEFAULT 0,
+  last_error text,
   created_at timestamptz NOT NULL DEFAULT now()
 );
+CREATE INDEX IF NOT EXISTS communications_due_idx ON communications(status, scheduled_for);
 
 INSERT INTO open_day_slots (event_date, start_time, capacity)
 SELECT d::date, t::time, 15
