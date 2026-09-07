@@ -60,8 +60,9 @@ export async function POST(req: NextRequest) {
 
       await client.query(`
         INSERT INTO communications (registration_id, channel, message_type, status, scheduled_for)
-        SELECT $1, channel, message_type, 'queued', scheduled_for
-        FROM (
+        SELECT $1, q.channel, q.message_type, 'queued', q.scheduled_for
+        FROM open_day_slots s
+        CROSS JOIN LATERAL (
           VALUES
             ('email','registration_confirmation',now()),
             ('whatsapp','registration_confirmation',now()),
@@ -72,7 +73,6 @@ export async function POST(req: NextRequest) {
             ('email','thank_you',((s.event_date + time '12:00') AT TIME ZONE 'Europe/Rome') + interval '1 day'),
             ('whatsapp','thank_you',((s.event_date + time '12:00') AT TIME ZONE 'Europe/Rome') + interval '1 day')
         ) AS q(channel,message_type,scheduled_for)
-        CROSS JOIN open_day_slots s
         WHERE s.id=$2
       `,[registrationId,d.slotId]);
 
