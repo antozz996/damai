@@ -23,6 +23,13 @@ export async function POST(req: NextRequest) {
       );
       if (!slot.rowCount) throw new Error('SLOT_NOT_FOUND');
 
+      const duplicate = await client.query(`
+        SELECT 1 FROM registrations
+        WHERE status <> 'cancelled' AND (lower(email)=lower($1) OR phone=$2)
+        LIMIT 1
+      `,[d.email,d.phone]);
+      if (duplicate.rowCount) throw new Error('DUPLICATE');
+
       const usage = await client.query<{ used:string }>(
         `SELECT COALESCE(SUM(1 + companions),0)::text AS used FROM registrations WHERE slot_id=$1 AND status IN ('registered','checked_in')`,
         [d.slotId]
@@ -45,12 +52,30 @@ export async function POST(req: NextRequest) {
         d.privacyConsent, d.marketingConsent, d.utmSource ?? null, d.utmMedium ?? null, d.utmCampaign ?? null
       ]);
 
+      const registrationId = insert.rows[0].id;
       await client.query(
         `INSERT INTO registration_events (registration_id, event_type, metadata) VALUES ($1,'registered',$2::jsonb)`,
-        [insert.rows[0].id, JSON.stringify({ partySize })]
+        [registrationId, JSON.stringify({ partySize })]
       );
 
-      await client.query(`INSERT INTO communications (registration_id, channel, message_type, status) VALUES ($1,'email','registration_confirmation','queued')`, [insert.rows[0].id]);
+      await client.query(`
+        INSERT INTO communications (registration_id, channel, message_type, status, scheduled_for)
+        SELECT $1, channel, message_type, 'queued', scheduled_for
+        FROM (
+          VALUES
+            ('email','registration_confirmation',now()),
+            ('whatsapp','registration_confirmation',now()),
+            ('email','reminder_48h',((s.event_date + s.start_time) AT TIME ZONE 'Europe/Rome') - interval '48 hours'),
+            ('whatsapp','reminder_48h',((s.event_date + s.start_time) AT TIME ZONE 'Europe/Rome') - interval '48 hours'),
+            ('email','reminder_24h',((s.event_date + s.start_time) AT TIME ZONE 'Europe/Rome') - interval '24 hours'),
+            ('whatsapp','reminder_24h',((s.event_date + s.start_time) AT TIME ZONE 'Europe/Rome') - interval '24 hours'),
+            ('email','thank_you',((s.event_date + time '12:00') AT TIME ZONE 'Europe/Rome') + interval '1 day'),
+            ('whatsapp','thank_you',((s.event_date + time '12:00') AT TIME ZONE 'Europe/Rome') + interval '1 day')
+        ) AS q(channel,message_type,scheduled_for)
+        CROSS JOIN open_day_slots s
+        WHERE s.id=$2
+      `,[registrationId,d.slotId]);
+
       return { registrationCode, qrToken: insert.rows[0].qr_token };
     });
 
@@ -61,6 +86,9 @@ export async function POST(req: NextRequest) {
     }
     if (error instanceof Error && error.message === 'SLOT_NOT_FOUND') {
       return NextResponse.json({ error: 'La fascia selezionata non è più disponibile.' }, { status: 404 });
+    }
+    if (error instanceof Error && error.message === 'DUPLICATE') {
+      return NextResponse.json({ error: 'Risulta già una registrazione attiva con questa email o questo numero di telefono.' }, { status: 409 });
     }
     console.error(error);
     return NextResponse.json({ error: 'Si è verificato un errore. Riprova tra poco.' }, { status: 500 });
