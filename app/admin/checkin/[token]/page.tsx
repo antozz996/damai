@@ -41,7 +41,7 @@ export default async function CheckinPage({ params, searchParams }: { params: Pr
             <button type="submit">Conferma ingresso · {1+r.companions} {1+r.companions===1?'persona':'persone'}</button>
           </form>
         )}
-        <div className="toolbar"><a href="/admin">← Dashboard</a></div>
+        <div className="toolbar"><a href="/admin/checkin">← Scanner QR</a><a href="/admin">Dashboard</a></div>
       </div>
     </main>
   );
