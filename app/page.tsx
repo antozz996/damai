@@ -206,14 +206,9 @@ export default function HomePage() {
             ))}
           </div>
         </div>
-        <div className="ldv-dedicated-art">
-          <Image src="/damai/ldv/pot.png" alt="Ceramica decorativa blu e bianca" width={620} height={760} />
-          <Image className="ldv-dedicated-lemon" src="/damai/ldv/lemons-02.png" alt="" width={800} height={800} />
-        </div>
       </section>
 
       <section className="ldv-registration" id="registrazione">
-        <Image className="ldv-registration-ornament" src="/damai/ldv/shield.png" alt="" width={820} height={275} />
         <div className="ldv-registration-heading">
           <p className="ldv-overline">IL TUO EVENTO INIZIA DA QUI</p>
           <h2 className="ldv-display">Registrati ora.</h2>

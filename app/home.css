@@ -810,16 +810,16 @@
 }
 
 .ldv-dedicated {
-  display: grid;
-  grid-template-columns: minmax(0, 1.12fr) minmax(240px, .88fr);
-  gap: 50px;
+  position: relative;
   overflow: hidden;
-  padding: 105px clamp(22px, 8vw, 130px) 110px;
+  padding: 105px clamp(22px, 8vw, 130px) 118px;
   background: var(--ldv-bg);
 }
 
 .ldv-dedicated-copy {
-  max-width: 730px;
+  max-width: 1240px;
+  margin: 0 auto;
+  text-align: center;
 }
 
 .ldv-dedicated-copy h2 {
@@ -828,21 +828,35 @@
 }
 
 .ldv-dedicated-copy h2 em {
-  margin-left: 31%;
+  margin-left: 0;
+}
+
+.ldv-dedicated-copy > .ldv-copy-script {
+  margin: 30px auto 0;
+  text-align: center;
 }
 
 .ldv-benefits {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   margin-top: 42px;
   border-top: 1px solid var(--ldv-line);
+  border-bottom: 1px solid var(--ldv-line);
+  text-align: left;
 }
 
 .ldv-benefit {
   display: grid;
-  grid-template-columns: 40px 1fr 47px;
-  align-items: center;
-  gap: 18px;
-  padding: 19px 0;
-  border-bottom: 1px solid var(--ldv-line);
+  min-width: 0;
+  grid-template-columns: 30px minmax(0, 1fr) 38px;
+  align-items: start;
+  gap: 14px;
+  padding: 30px 25px 32px;
+  border-right: 1px solid var(--ldv-line);
+}
+
+.ldv-benefit:last-child {
+  border-right: 0;
 }
 
 .ldv-benefit > span {
@@ -860,7 +874,7 @@
 }
 
 .ldv-benefit p {
-  max-width: 475px;
+  max-width: 310px;
   margin: 0;
   color: var(--ldv-muted);
   font-size: 14px;
@@ -877,47 +891,12 @@
   stroke-width: 1;
 }
 
-.ldv-dedicated-art {
-  position: relative;
-  min-height: 525px;
-}
-
-.ldv-dedicated-art > img:first-child {
-  position: absolute;
-  right: 5%;
-  bottom: -105px;
-  width: min(320px, 90%);
-  height: auto;
-  filter: drop-shadow(5px 13px 3px rgba(34, 29, 18, .14));
-  transform: rotate(4deg);
-}
-
-.ldv-dedicated-lemon {
-  position: absolute;
-  top: 0;
-  right: -100px;
-  width: min(350px, 85%);
-  height: auto;
-  transform: rotate(10deg);
-}
-
 .ldv-registration {
   position: relative;
   overflow: hidden;
   padding: 104px clamp(16px, 5vw, 82px) 124px;
   background: var(--ldv-paper);
   border-top: 1px solid var(--ldv-line);
-}
-
-.ldv-registration-ornament {
-  position: absolute;
-  top: -98px;
-  left: 50%;
-  width: min(640px, 72vw);
-  height: auto;
-  opacity: .55;
-  pointer-events: none;
-  transform: translateX(-50%);
 }
 
 .ldv-registration-heading {
@@ -1640,7 +1619,7 @@
 
   .ldv-dedicated {
     display: block;
-    padding: 77px 22px 65px;
+    padding: 77px 22px 74px;
   }
 
   .ldv-dedicated-copy h2 em {
@@ -1658,6 +1637,7 @@
   }
 
   .ldv-benefits {
+    grid-template-columns: 1fr;
     margin-top: 34px;
   }
 
@@ -1665,6 +1645,12 @@
     grid-template-columns: 30px 1fr 38px;
     gap: 11px;
     padding: 17px 0;
+    border-right: 0;
+    border-bottom: 1px solid var(--ldv-line);
+  }
+
+  .ldv-benefit:last-child {
+    border-bottom: 0;
   }
 
   .ldv-benefit h3 {
@@ -1680,33 +1666,17 @@
     height: 30px;
   }
 
-  .ldv-dedicated-art {
-    min-height: 270px;
-    margin-top: 32px;
-  }
-
-  .ldv-dedicated-art > img:first-child {
-    right: 9%;
-    bottom: -126px;
-    width: 215px;
-  }
-
-  .ldv-dedicated-lemon {
-    top: -30px;
-    right: -52px;
-    width: 220px;
-  }
-
   .ldv-registration {
-    padding: 77px 12px 88px;
+    padding: 68px 12px 88px;
   }
 
   .ldv-registration-heading {
-    margin-bottom: 43px;
+    margin-bottom: 37px;
   }
 
   .ldv-registration-heading h2 {
-    font-size: clamp(58px, 17vw, 84px);
+    font-size: clamp(50px, 14vw, 62px);
+    letter-spacing: -.055em;
   }
 
   .ldv-registration-heading > p:last-child {
