@@ -1399,41 +1399,51 @@
   }
 
   .ldv-hero-frame {
-    top: -43px;
-    left: 51%;
-    width: 920px;
+    top: -21px;
+    left: 50%;
+    width: 500px;
     max-width: none;
-    opacity: .74;
+    opacity: .88;
   }
 
   .ldv-hero-lemon {
-    bottom: 410px;
-    left: -175px;
-    width: 375px;
-    max-width: none;
+    display: none;
   }
 
   .ldv-hero-copy {
-    min-height: 630px;
-    padding: 93px 22px 62px;
+    display: flex;
+    min-height: 700px;
+    flex-direction: column;
+    align-items: center;
+    padding: 180px 24px 58px;
+    text-align: center;
   }
 
   .ldv-hero-title {
-    font-size: clamp(69px, 19vw, 105px);
+    width: 100%;
+    font-size: clamp(62px, 17.5vw, 82px);
+    letter-spacing: -.06em;
+  }
+
+  .ldv-hero-title span:last-child {
+    margin-left: 0;
   }
 
   .ldv-hero-script {
     margin-top: 27px;
-    margin-left: 17%;
+    margin-left: 0;
     font-size: 31px;
   }
 
   .ldv-hero-lede {
     max-width: 345px;
     font-size: 15px;
+    text-align: center;
   }
 
   .ldv-hero-meta {
+    width: 100%;
+    justify-content: center;
     gap: 11px;
     margin-top: 27px;
   }
@@ -1451,8 +1461,8 @@
   }
 
   .ldv-hero-visual {
-    min-height: 530px;
-    margin: 16px 22px 45px;
+    min-height: 465px;
+    margin: 10px 18px 45px;
   }
 
   .ldv-hero-caption {
@@ -1473,9 +1483,7 @@
   }
 
   .ldv-hero-pot {
-    right: -48px;
-    bottom: -91px;
-    width: 155px;
+    display: none;
   }
 
   .ldv-ornament-band {
@@ -1494,15 +1502,20 @@
   }
 
   .ldv-experience-image {
-    width: calc(100% - 10px);
-    min-height: 430px;
-    margin: 0 0 0 10px;
+    width: 100%;
+    min-height: 410px;
+    margin: 0;
   }
 
   .ldv-experience-branch {
-    top: -65px;
-    right: -100px;
-    width: 220px;
+    top: -47px;
+    right: -49px;
+    width: 164px;
+    max-width: none;
+  }
+
+  .ldv-experience-copy {
+    width: 100%;
   }
 
   .ldv-experience-copy h2,
@@ -1514,7 +1527,11 @@
   .ldv-experience-copy h2 em,
   .ldv-section-intro h2 em,
   .ldv-dedicated-copy h2 em {
-    margin-left: 18%;
+    margin-left: 0;
+  }
+
+  .ldv-copy-script {
+    margin-left: 0;
   }
 
   .ldv-experience-copy > p:not(.ldv-overline):not(.ldv-script) {
@@ -1535,10 +1552,11 @@
   }
 
   .ldv-program-inner h2 em {
-    margin-left: 14%;
+    margin-left: 0;
   }
 
   .ldv-date-grid {
+    width: 100%;
     margin-top: 43px;
   }
 
@@ -1572,16 +1590,17 @@
   }
 
   .ldv-program-tree {
-    bottom: -180px;
-    left: -170px;
-    width: 420px;
+    bottom: -125px;
+    left: -112px;
+    width: 310px;
     max-width: none;
   }
 
   .ldv-program-frame {
-    top: -34px;
-    width: 680px;
+    top: -10px;
+    width: 440px;
     max-width: none;
+    opacity: .28;
   }
 
   .ldv-steps-section {
@@ -1625,7 +1644,13 @@
   }
 
   .ldv-dedicated-copy h2 em {
-    margin-left: 13%;
+    margin-left: 0;
+  }
+
+  .ldv-dedicated-copy > .ldv-overline,
+  .ldv-dedicated-copy > h2,
+  .ldv-dedicated-copy > .ldv-copy-script {
+    text-align: center;
   }
 
   .ldv-copy-script {
@@ -1690,6 +1715,8 @@
 
   .ldv-form-wrap {
     display: block;
+    width: 100%;
+    max-width: 100%;
   }
 
   .ldv-form-aside {
@@ -1702,6 +1729,8 @@
   }
 
   .ldv-form-wrap .form-main {
+    width: 100%;
+    max-width: 100%;
     padding: 31px 20px 35px;
   }
 
