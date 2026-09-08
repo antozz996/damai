@@ -1640,7 +1640,7 @@
 
   .ldv-dedicated {
     display: block;
-    padding: 77px 22px 65px;
+    padding: 77px 22px 20px;
   }
 
   .ldv-dedicated-copy h2 em {
@@ -1681,32 +1681,35 @@
   }
 
   .ldv-dedicated-art {
-    min-height: 270px;
-    margin-top: 32px;
+    min-height: 108px;
+    margin-top: 12px;
   }
 
   .ldv-dedicated-art > img:first-child {
-    right: 9%;
-    bottom: -126px;
-    width: 215px;
+    display: none;
   }
 
   .ldv-dedicated-lemon {
-    top: -30px;
-    right: -52px;
-    width: 220px;
+    top: -3px;
+    right: -42px;
+    width: 165px;
   }
 
   .ldv-registration {
-    padding: 77px 12px 88px;
+    padding: 68px 12px 88px;
+  }
+
+  .ldv-registration-ornament {
+    display: none;
   }
 
   .ldv-registration-heading {
-    margin-bottom: 43px;
+    margin-bottom: 37px;
   }
 
   .ldv-registration-heading h2 {
-    font-size: clamp(58px, 17vw, 84px);
+    font-size: clamp(50px, 14vw, 62px);
+    letter-spacing: -.055em;
   }
 
   .ldv-registration-heading > p:last-child {
