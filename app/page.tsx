@@ -3,82 +3,247 @@ import RegistrationForm from './registration-form';
 
 export const dynamic = 'force-dynamic';
 
-function LemonBranch({ className = '' }: { className?: string }) {
+const steps = [
+  {
+    number: '01',
+    title: 'Raccontaci di te',
+    text: 'Lasciaci le informazioni essenziali sul tuo evento e su chi vuoi festeggiare.',
+  },
+  {
+    number: '02',
+    title: 'Scegli il momento',
+    text: 'Seleziona il giorno e la fascia oraria che preferisci: la disponibilità è aggiornata in tempo reale.',
+  },
+  {
+    number: '03',
+    title: 'Ricevi il tuo pass',
+    text: 'Ti invieremo un QR personale, valido per te e per i tuoi accompagnatori.',
+  },
+  {
+    number: '04',
+    title: 'Vivi DAMAI',
+    text: 'All’ingresso il nostro team saprà già come accoglierti e accompagnarti.',
+  },
+];
+
+const benefits = [
+  {
+    number: '01',
+    title: 'Meno attese',
+    text: 'Ogni ingresso è organizzato per farti vivere la location con i tuoi tempi.',
+  },
+  {
+    number: '02',
+    title: 'Nessuna visita frettolosa',
+    text: 'Tre giornate per guardare, ascoltare e immaginare il tuo giorno speciale.',
+  },
+  {
+    number: '03',
+    title: 'A tu per tu',
+    text: 'Un incontro dedicato con chi conosce DAMAI e sa trasformare un’idea in esperienza.',
+  },
+];
+
+function Arrow() {
+  return <span aria-hidden="true">↗</span>;
+}
+
+function FineLineIcon({ type }: { type: 'clock' | 'eye' | 'chat' }) {
+  if (type === 'clock') {
+    return (
+      <svg viewBox="0 0 48 48" aria-hidden="true">
+        <circle cx="24" cy="24" r="15" />
+        <path d="M24 15v10l7 4" />
+      </svg>
+    );
+  }
+
+  if (type === 'eye') {
+    return (
+      <svg viewBox="0 0 48 48" aria-hidden="true">
+        <path d="M6 24s7-11 18-11 18 11 18 11-7 11-18 11S6 24 6 24Z" />
+        <circle cx="24" cy="24" r="5" />
+      </svg>
+    );
+  }
+
   return (
-    <svg className={className} viewBox="0 0 340 250" aria-hidden="true">
-      <path d="M20 226C94 174 131 111 170 24M118 137c54 0 103 25 153 76M162 48c44 14 80 47 111 89" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-      <g fill="#315a44">
-        <path d="M55 188c6-26 27-39 52-33-3 27-24 42-52 33Z"/><path d="M108 139c0-26 17-44 43-44 3 25-13 45-43 44Z"/>
-        <path d="M167 63c16-22 39-27 61-14-13 24-37 30-61 14Z"/><path d="M210 121c20-17 44-16 63 2-18 20-43 20-63-2Z"/>
-        <path d="M237 179c25-9 47 0 59 23-24 12-48 3-59-23Z"/><path d="M132 176c22-14 46-9 61 11-21 17-46 12-61-11Z"/>
-      </g>
-      <g fill="#efc64c" stroke="#9c6b1d" strokeWidth="2">
-        <ellipse cx="76" cy="164" rx="26" ry="35" transform="rotate(35 76 164)"/><ellipse cx="168" cy="102" rx="27" ry="37" transform="rotate(-18 168 102)"/>
-        <ellipse cx="252" cy="142" rx="27" ry="37" transform="rotate(26 252 142)"/><ellipse cx="215" cy="207" rx="27" ry="36" transform="rotate(-28 215 207)"/>
-      </g>
-      <g fill="none" stroke="#f9e592" strokeWidth="2" opacity=".8"><path d="M59 151c10-12 21-17 32-15"/><path d="M153 86c9-10 19-14 29-13"/><path d="M238 126c10-9 20-12 30-9"/></g>
+    <svg viewBox="0 0 48 48" aria-hidden="true">
+      <path d="M8 10h32v22H21l-8 7v-7H8V10Z" />
+      <path d="M16 18h16M16 24h10" />
     </svg>
   );
 }
 
 export default function HomePage() {
   return (
-    <main className="shell">
-      <header className="topbar">
-        <a className="top-logo" href="#top" aria-label="DAMAI Exclusive Garden"><Image src="/damai/damai-logo-cream.png" alt="DAMAI Exclusive Garden" width={228} height={55} priority /></a>
-        <div className="top-event">Open Days · 30/31 ottobre · 1 novembre</div>
-        <a className="top-cta" href="#registrazione">Registrati</a>
+    <main className="ldv-page">
+      <header className="ldv-nav">
+        <a className="ldv-wordmark" href="#top" aria-label="DAMAI Exclusive Garden">
+          <span>DAMAI</span>
+          <small>EXCLUSIVE GARDEN</small>
+        </a>
+        <div className="ldv-nav-center" aria-label="Tema dell’evento">
+          <span className="ldv-script">La Dolce Vita</span>
+          <span>Open Days · 2026</span>
+        </div>
+        <nav className="ldv-nav-links" aria-label="Navigazione principale">
+          <a href="#esperienza">L’esperienza</a>
+          <a href="#programma">Il programma</a>
+          <a className="ldv-nav-book" href="#registrazione">Registrati <Arrow /></a>
+        </nav>
       </header>
 
-      <section className="hero" id="top">
-        <div className="hero-copy">
-          <div className="kicker">DAMAI presenta</div>
-          <div className="edition">OPEN DAYS <span>2026</span></div>
-          <h1>La Dolce <em>Vita</em></h1>
-          <p className="hero-tagline">Tre giornate per immaginare il tuo evento,<br/>nel luogo in cui ogni dettaglio diventa ricordo.</p>
-          <div className="hero-date">
-            <span>30 · 31</span><small>OTTOBRE</small><i /><span>01</span><small>NOVEMBRE</small><i /><span>16—21</span><small>ORARIO</small>
+      <section className="ldv-hero" id="top">
+        <Image className="ldv-hero-frame" src="/damai/ldv/up-frame.png" alt="" width={1800} height={590} priority />
+        <Image className="ldv-hero-lemon" src="/damai/ldv/lemons-02.png" alt="" width={900} height={900} priority />
+        <div className="ldv-hero-copy">
+          <p className="ldv-overline">DAMAI PRESENTA</p>
+          <p className="ldv-hero-edition">OPEN DAYS <span>2026</span></p>
+          <h1 className="ldv-display ldv-hero-title">
+            <span>LA DOLCE</span>
+            <span>VITA</span>
+          </h1>
+          <p className="ldv-script ldv-hero-script">Tre giorni per scegliere la tua storia.</p>
+          <p className="ldv-hero-lede">
+            Un invito a scoprire DAMAI, i suoi spazi e tutto quello che può diventare il tuo prossimo evento.
+          </p>
+          <div className="ldv-hero-meta">
+            <div><strong>30 · 31</strong><span>OTTOBRE</span></div>
+            <i aria-hidden="true" />
+            <div><strong>01</strong><span>NOVEMBRE</span></div>
+            <i aria-hidden="true" />
+            <div><strong>16:00 — 21:00</strong><span>ORARIO</span></div>
           </div>
-          <a href="#registrazione" className="cta cta-gold">Prenota la tua visita <span>↗</span></a>
-          <LemonBranch className="lemon lemon-left" />
+          <a className="ldv-button ldv-button-gold" href="#registrazione">Prenota la tua visita <Arrow /></a>
         </div>
-        <div className="hero-visual">
-          <Image className="hero-photo" src="/damai/hero-exterior.webp" alt="Ingresso serale del DAMAI Event Garden" fill priority sizes="(max-width: 900px) 100vw, 50vw" />
-          <div className="photo-shade" />
-          <div className="poster-seal"><span>INGRESSO</span><strong>GRATUITO</strong><small>SU REGISTRAZIONE</small></div>
-          <div className="photo-caption"><span>Via Marina di Varcaturo</span><strong>Un assaggio della tua prossima storia.</strong></div>
-          <LemonBranch className="lemon lemon-right" />
-        </div>
-      </section>
-
-      <div className="tile-ribbon" aria-hidden="true"><span/><span/><span/><span/><span/><span/><span/><span/></div>
-
-      <section className="section journey">
-        <div className="section-head"><div className="eyebrow">La tua esperienza</div><h2>Una visita pensata<br/><em>intorno a te.</em></h2><p className="sub">Niente attese, niente visita impersonale. Scegli il tuo momento e lasciati accompagnare alla scoperta di DAMAI.</p></div>
-        <div className="steps">
-          <div className="step"><div className="step-num">01</div><h3>Raccontaci di te</h3><p>Inserisci i contatti e le prime informazioni sul tuo evento.</p></div>
-          <div className="step"><div className="step-num">02</div><h3>Scegli il momento</h3><p>Giorno e fascia oraria, con disponibilità aggiornata in tempo reale.</p></div>
-          <div className="step"><div className="step-num">03</div><h3>Ricevi il tuo pass</h3><p>Un QR personale da mostrare all&apos;ingresso, valido anche per gli accompagnatori.</p></div>
-          <div className="step"><div className="step-num">04</div><h3>Vivi DAMAI</h3><p>Il nostro team sarà pronto ad accoglierti e a conoscere la tua idea.</p></div>
+        <div className="ldv-hero-visual">
+          <Image className="ldv-hero-photo" src="/damai/hero-exterior.webp" alt="Il giardino DAMAI illuminato al tramonto" fill priority sizes="(max-width: 760px) 100vw, 45vw" />
+          <div className="ldv-hero-photo-wash" />
+          <div className="ldv-hero-stamp"><span>INGRESSO</span><strong>GRATUITO</strong><small>SU REGISTRAZIONE</small></div>
+          <div className="ldv-hero-caption"><span>Via Marina di Varcaturo</span><strong>Il luogo in cui ogni dettaglio diventa ricordo.</strong></div>
+          <Image className="ldv-hero-pot" src="/damai/ldv/pot.png" alt="" width={620} height={760} />
         </div>
       </section>
 
-      <section className="registration" id="registrazione">
-        <div className="registration-title"><span className="eyebrow">Il tuo evento inizia da qui</span><h2>Prenota la tua visita.</h2><p>La registrazione è gratuita. Gli ingressi sono a disponibilità limitata per offrirti un&apos;accoglienza realmente personale.</p></div>
-        <div className="form-wrap">
-          <aside className="form-aside">
-            <Image src="/damai/damai-logo-cream.png" alt="DAMAI Exclusive Garden" width={190} height={46} />
-            <div className="aside-rule"/><div className="eyebrow gold">DAMAI Open Days</div>
-            <h3>La magia è nelle persone che scelgono di esserci.</h3>
+      <div className="ldv-ornament-band" aria-hidden="true">
+        <Image src="/damai/ldv/shield.png" alt="" width={920} height={310} />
+      </div>
+
+      <section className="ldv-experience" id="esperienza">
+        <div className="ldv-section-label">01 <span>L’esperienza</span></div>
+        <div className="ldv-experience-grid">
+          <div className="ldv-experience-image">
+            <Image src="/damai/hero-exterior.webp" alt="Gli spazi esterni di DAMAI" fill sizes="(max-width: 760px) 100vw, 48vw" />
+            <div className="ldv-image-note">Un assaggio della tua prossima storia.</div>
+            <Image className="ldv-experience-branch" src="/damai/ldv/lemons-03.png" alt="" width={800} height={800} />
+          </div>
+          <div className="ldv-experience-copy">
+            <p className="ldv-overline">MORE THAN AN OPEN DAY</p>
+            <h2 className="ldv-display">La visita<br /><em>intorno a te.</em></h2>
+            <p className="ldv-script ldv-copy-script">Dedicato a te</p>
+            <p>
+              Non è una semplice visita. È il primo momento in cui il tuo evento comincia a prendere forma: tra il verde del giardino, la luce della sera e la cura di ogni dettaglio.
+            </p>
+            <p>
+              Scegli il tuo giorno, entra senza attese e lasciati guidare dal team DAMAI. Porta con te chi vuoi: alcune idee hanno bisogno di essere condivise per diventare vere.
+            </p>
+            <a className="ldv-text-link" href="#registrazione">Scopri il tuo momento <Arrow /></a>
+          </div>
+        </div>
+      </section>
+
+      <section className="ldv-program" id="programma">
+        <Image className="ldv-program-tree" src="/damai/ldv/lemons-01.png" alt="" width={900} height={900} />
+        <Image className="ldv-program-frame" src="/damai/ldv/up-frame.png" alt="" width={1500} height={490} />
+        <div className="ldv-section-label">02 <span>Il programma</span></div>
+        <div className="ldv-program-inner">
+          <p className="ldv-overline">SEGNALO IN AGENDA</p>
+          <h2 className="ldv-display">Tre giorni,<br /><em>una sola experience.</em></h2>
+          <div className="ldv-date-grid">
+            <div><strong>30</strong><span>OTTOBRE</span><small>VENERDÌ</small></div>
+            <div><strong>31</strong><span>OTTOBRE</span><small>SABATO</small></div>
+            <div><strong>01</strong><span>NOVEMBRE</span><small>DOMENICA</small></div>
+          </div>
+          <div className="ldv-program-time"><span>FASCE ORARIE</span><strong>16:00 <b>~</b> 21:00</strong></div>
+          <p className="ldv-program-note">L’accesso è gratuito e riservato a chi si registra. Scegli una fascia oraria: ti aspettiamo con un’accoglienza pensata per te.</p>
+          <a className="ldv-button ldv-button-navy" href="#registrazione">Scegli il tuo ingresso <Arrow /></a>
+        </div>
+      </section>
+
+      <section className="ldv-steps-section">
+        <div className="ldv-section-label">03 <span>Come funziona</span></div>
+        <div className="ldv-section-intro">
+          <p className="ldv-overline">SEMPLICE, VELOCE, PERSONALE</p>
+          <h2 className="ldv-display">Il tuo pass<br /><em>in quattro passi.</em></h2>
+        </div>
+        <div className="ldv-steps-grid">
+          {steps.map((step) => (
+            <article className="ldv-step" key={step.number}>
+              <span className="ldv-step-number">{step.number}</span>
+              <h3 className="ldv-display">{step.title}</h3>
+              <p>{step.text}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="ldv-dedicated">
+        <div className="ldv-dedicated-copy">
+          <p className="ldv-overline">PERCHÉ PRENOTARE</p>
+          <h2 className="ldv-display">Ogni dettaglio<br /><em>merita il suo tempo.</em></h2>
+          <p className="ldv-script ldv-copy-script">Dedicato a te</p>
+          <div className="ldv-benefits">
+            {benefits.map((benefit, index) => (
+              <article className="ldv-benefit" key={benefit.number}>
+                <span>{benefit.number}</span>
+                <div>
+                  <h3 className="ldv-display">{benefit.title}</h3>
+                  <p>{benefit.text}</p>
+                </div>
+                <FineLineIcon type={index === 0 ? 'clock' : index === 1 ? 'eye' : 'chat'} />
+              </article>
+            ))}
+          </div>
+        </div>
+        <div className="ldv-dedicated-art">
+          <Image src="/damai/ldv/pot.png" alt="Ceramica decorativa blu e bianca" width={620} height={760} />
+          <Image className="ldv-dedicated-lemon" src="/damai/ldv/lemons-02.png" alt="" width={800} height={800} />
+        </div>
+      </section>
+
+      <section className="ldv-registration" id="registrazione">
+        <Image className="ldv-registration-ornament" src="/damai/ldv/shield.png" alt="" width={820} height={275} />
+        <div className="ldv-registration-heading">
+          <p className="ldv-overline">IL TUO EVENTO INIZIA DA QUI</p>
+          <h2 className="ldv-display">Registrati ora.</h2>
+          <p>La registrazione è gratuita. Gli ingressi sono a disponibilità limitata per regalarti un incontro davvero personale.</p>
+        </div>
+        <div className="ldv-form-wrap">
+          <aside className="ldv-form-aside">
+            <p className="ldv-aside-brand">DAMAI <span>Exclusive Garden</span></p>
+            <span className="ldv-aside-rule" aria-hidden="true" />
+            <p className="ldv-overline">DAMAI OPEN DAYS</p>
+            <h3 className="ldv-display">La magia è nelle persone che scelgono di esserci.</h3>
             <p>Una visita pensata per scoprire spazi, atmosfera e possibilità del tuo futuro evento.</p>
-            <ul><li>Ingresso gratuito</li><li>Parcheggio in loco</li><li>Registrazione accompagnatori</li><li>QR personale di ingresso</li><li>Consulenza con il team DAMAI</li></ul>
-            <div className="aside-date">30 · 31 OTTOBRE<br/>01 NOVEMBRE 2026</div>
-            <LemonBranch className="lemon aside-lemon" />
+            <ul>
+              <li>Ingresso gratuito</li>
+              <li>Parcheggio in loco</li>
+              <li>QR personale di ingresso</li>
+              <li>Consulenza con il team DAMAI</li>
+            </ul>
+            <p className="ldv-aside-date">30 · 31 OTTOBRE<br />01 NOVEMBRE 2026</p>
+            <Image className="ldv-form-lemon" src="/damai/ldv/lemons-03.png" alt="" width={780} height={780} />
           </aside>
           <RegistrationForm />
         </div>
       </section>
-      <footer><Image src="/damai/damai-logo-cream.png" alt="DAMAI Exclusive Garden" width={170} height={41}/><span>Open Days 2026 · La Dolce Vita</span></footer>
+
+      <footer className="ldv-footer">
+        <div className="ldv-footer-brand"><span>DAMAI</span><small>EXCLUSIVE GARDEN</small></div>
+        <p>Open Days 2026 · La Dolce Vita</p>
+        <a href="#top">Torna su <Arrow /></a>
+      </footer>
     </main>
   );
 }
