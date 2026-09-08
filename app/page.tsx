@@ -95,8 +95,8 @@ export default function HomePage() {
       </header>
 
       <section className="ldv-hero" id="top">
-        <Image className="ldv-hero-frame" src="/damai/ldv/up-frame.png" alt="" width={1800} height={590} priority />
-        <Image className="ldv-hero-lemon" src="/damai/ldv/lemons-02.png" alt="" width={900} height={900} priority />
+        <Image className="ldv-hero-frame" src="/damai/ldv/up-frame.png" alt="" width={1800} height={590} />
+        <Image className="ldv-hero-lemon" src="/damai/ldv/lemons-02.png" alt="" width={900} height={900} />
         <div className="ldv-hero-copy">
           <p className="ldv-overline">DAMAI PRESENTA</p>
           <p className="ldv-hero-edition">OPEN DAYS <span>2026</span></p>
