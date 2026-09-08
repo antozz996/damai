@@ -2,7 +2,7 @@ CREATE TABLE IF NOT EXISTS open_day_slots (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   event_date date NOT NULL,
   start_time time NOT NULL,
-  capacity integer NOT NULL DEFAULT 15 CHECK (capacity > 0),
+  capacity integer NOT NULL DEFAULT 60 CHECK (capacity > 0),
   is_active boolean NOT NULL DEFAULT true,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now(),
@@ -67,7 +67,7 @@ CREATE TABLE IF NOT EXISTS communications (
 CREATE INDEX IF NOT EXISTS communications_due_idx ON communications(status, scheduled_for);
 
 INSERT INTO open_day_slots (event_date, start_time, capacity)
-SELECT d::date, t::time, 15
+SELECT d::date, t::time, 60
 FROM unnest(ARRAY['2026-10-30'::date,'2026-10-31'::date,'2026-11-01'::date]) d
-CROSS JOIN unnest(ARRAY['16:00'::time,'16:30'::time,'17:00'::time,'17:30'::time,'18:00'::time,'18:30'::time,'19:00'::time,'19:30'::time,'20:00'::time,'20:30'::time]) t
+CROSS JOIN unnest(ARRAY['16:00'::time,'16:30'::time,'17:00'::time,'17:30'::time,'18:00'::time,'18:30'::time,'19:00'::time,'19:30'::time,'20:00'::time,'20:30'::time,'21:00'::time]) t
 ON CONFLICT (event_date, start_time) DO NOTHING;

@@ -59,7 +59,7 @@ Nessun segreto deve essere committato nel repository.
 
 Schema riproducibile in `db/schema.sql`.
 
-Gli slot iniziali sono dalle 16:00 alle 20:30 ogni 30 minuti, per tutte e tre le date, con capienza iniziale di 15 persone per fascia. La capienza è modificabile dall'area staff.
+Gli slot iniziali sono dalle 16:00 alle 21:00 ogni 30 minuti, per tutte e tre le date, con capienza iniziale di 60 persone per fascia. La capienza è modificabile dall'area staff.
 
 ## Comunicazioni
 
