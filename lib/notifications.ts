@@ -88,6 +88,7 @@ function whatsappTemplate(type: CommunicationType) {
     reminder_48h: process.env.WA_TEMPLATE_REMINDER_48H,
     reminder_24h: process.env.WA_TEMPLATE_REMINDER_24H,
     thank_you: process.env.WA_TEMPLATE_THANK_YOU,
+    exit_thank_you: undefined,
   };
   return map[type];
 }
