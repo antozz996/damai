@@ -84,7 +84,7 @@ export default function RegistrationForm() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Registrazione non riuscita.');
-      window.location.href = `https://www.damaigarden.it/opendays?ticket=${encodeURIComponent(data.qrToken)}`;
+      window.location.href = `/ticket/${data.qrToken}`;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registrazione non riuscita.');
       setLoading(false);
