@@ -86,5 +86,6 @@ Per configurare Resend, Vercel e il test dello scanner QR consulta [la guida ema
 
 ## Stato
 
-Branch di sviluppo: `open-days-system`  
-Pull Request: `#1`
+Branch di sviluppo: `design/ldv-original-artwork`<br>
+Pull Request: [#11](https://github.com/antozz996/damai/pull/11)<br>
+Preview Vercel: [damai-git-design-ldv-original-artwork-antozz996s-projects.vercel.app](https://damai-git-design-ldv-original-artwork-antozz996s-projects.vercel.app)
