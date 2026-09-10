@@ -29,10 +29,7 @@ export default async function TicketPage({ params }: { params: Promise<{ token: 
   if (!result.rowCount) notFound();
   const r = result.rows[0];
 
-  const h = await headers();
-  const host = h.get('x-forwarded-host') || h.get('host');
-  const protocol = h.get('x-forwarded-proto') || 'https';
-  const checkinUrl = `${protocol}://${host}/admin/checkin/${token}`;
+  const checkinUrl = `https://www.damaigarden.it/opendays?checkin=${encodeURIComponent(token)}`;
   const qr = await QRCode.toDataURL(checkinUrl, { width: 520, margin: 1, errorCorrectionLevel: 'M' });
   const date = new Intl.DateTimeFormat('it-IT', { weekday:'long', day:'numeric', month:'long', year:'numeric' }).format(new Date(`${r.event_date}T12:00:00`));
 
