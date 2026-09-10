@@ -1,4 +1,3 @@
-import { headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 import QRCode from 'qrcode';
 import { query } from '@/lib/db';
@@ -29,7 +28,7 @@ export default async function TicketPage({ params }: { params: Promise<{ token: 
   if (!result.rowCount) notFound();
   const r = result.rows[0];
 
-  const checkinUrl = `${protocol}://${host}/admin/checkin/${token}`;
+  const checkinUrl = `https://damai-rouge.vercel.app/admin/checkin/${token}`;
   const qr = await QRCode.toDataURL(checkinUrl, { width: 520, margin: 1, errorCorrectionLevel: 'M' });
   const date = new Intl.DateTimeFormat('it-IT', { weekday:'long', day:'numeric', month:'long', year:'numeric' }).format(new Date(`${r.event_date}T12:00:00`));
 
