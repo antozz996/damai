@@ -72,6 +72,8 @@ Il sistema crea automaticamente in coda:
 
 Email e WhatsApp sono indipendenti: se un provider non è ancora configurato, la comunicazione resta in coda e non blocca la registrazione.
 
+Per configurare Resend, Vercel e il test dello scanner QR consulta [la guida email](docs/email-setup.md).
+
 ## Sicurezza
 
 - Area staff protetta server-side
