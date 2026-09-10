@@ -17,7 +17,7 @@ Sistema full-stack per gli Open Days DAMAI del **30-31 ottobre e 1 novembre 2026
 - Tracking UTM e provenienza lead
 - Log degli eventi della registrazione
 - Coda comunicazioni email + WhatsApp
-- Conferma immediata, reminder 48h, reminder 24h, thank-you post evento
+- Conferma email immediata con QR allegato, reminder 48h, reminder 24h, thank-you post evento
 - Retry automatico delle comunicazioni fallite
 - Informativa privacy dedicata Open Days
 
@@ -72,6 +72,8 @@ Il sistema crea automaticamente in coda:
 
 Email e WhatsApp sono indipendenti: se un provider non è ancora configurato, la comunicazione resta in coda e non blocca la registrazione.
 
+Per configurare Resend, Vercel e il test dello scanner QR consulta [la guida email](docs/email-setup.md).
+
 ## Sicurezza
 
 - Area staff protetta server-side
@@ -84,5 +86,6 @@ Email e WhatsApp sono indipendenti: se un provider non è ancora configurato, la
 
 ## Stato
 
-Branch di sviluppo: `open-days-system`  
-Pull Request: `#1`
+Branch di sviluppo: `design/ldv-original-artwork`<br>
+Pull Request: [#11](https://github.com/antozz996/damai/pull/11)<br>
+Preview Vercel: [damai-git-design-ldv-original-artwork-antozz996s-projects.vercel.app](https://damai-git-design-ldv-original-artwork-antozz996s-projects.vercel.app)

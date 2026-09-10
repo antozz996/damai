@@ -1,5 +1,7 @@
 type CommunicationType = 'registration_confirmation' | 'reminder_48h' | 'reminder_24h' | 'thank_you';
 
+import QRCode from 'qrcode';
+
 type Guest = {
   firstName: string;
   lastName: string;
@@ -17,6 +19,20 @@ function baseUrl() {
 
 function ticketUrl(guest: Guest) {
   return `${baseUrl()}/ticket/${guest.qrToken}`;
+}
+
+function checkinUrl(guest: Guest) {
+  return `${baseUrl()}/admin/checkin/${guest.qrToken}`;
+}
+
+function escapeHtml(value: string) {
+  return value.replace(/[&<>'\"]/g, character => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    "'": '&#39;',
+    '"': '&quot;',
+  })[character] || character);
 }
 
 function prettyDate(value: string) {
@@ -58,11 +74,30 @@ export async function sendEmail(type: CommunicationType, guest: Guest) {
   const from = process.env.EMAIL_FROM;
   if (!apiKey || !from || !baseUrl()) return { sent:false, reason:'email_not_configured' };
   const copy = emailCopy(type, guest);
-  const html = `<!doctype html><html><body style="margin:0;background:#f4ede1;font-family:Georgia,serif;color:#2f261e"><div style="max-width:620px;margin:0 auto;padding:44px 24px"><div style="letter-spacing:.18em;font-size:28px">DAMAI</div><div style="font-size:10px;letter-spacing:.3em;text-transform:uppercase;margin-bottom:44px">Exclusive Garden</div><h1 style="font-weight:400;font-size:38px;line-height:1.05">${copy.heading}</h1><p style="font-size:18px;line-height:1.6">Ciao ${guest.firstName},<br>${copy.text}</p><p style="margin:34px 0"><a href="${copy.link}" style="display:inline-block;background:#0e2d4f;color:white;text-decoration:none;padding:15px 22px;letter-spacing:.1em;text-transform:uppercase;font-size:12px">${copy.cta}</a></p><p style="font-size:13px;color:#6f6256">Codice registrazione: ${guest.registrationCode}</p></div></body></html>`;
+  const qrDataUrl = await QRCode.toDataURL(checkinUrl(guest), { width: 520, margin: 1, errorCorrectionLevel: 'M' });
+  const qrContent = qrDataUrl.replace(/^data:image\/png;base64,/, '');
+  const html = `<!doctype html><html><body style="margin:0;background:#f4ede1;font-family:Georgia,serif;color:#2f261e"><div style="max-width:620px;margin:0 auto;padding:44px 24px"><div style="letter-spacing:.18em;font-size:28px">DAMAI</div><div style="font-size:10px;letter-spacing:.3em;text-transform:uppercase;margin-bottom:44px">Exclusive Garden</div><h1 style="font-weight:400;font-size:38px;line-height:1.05">${escapeHtml(copy.heading)}</h1><p style="font-size:18px;line-height:1.6">Ciao ${escapeHtml(guest.firstName)},<br>${escapeHtml(copy.text)}</p><div style="margin:30px 0 26px;text-align:center;background:#fff;padding:20px"><img src="cid:damai-qr-code" width="240" height="240" alt="QR code personale DAMAI" style="display:block;width:240px;height:240px;margin:0 auto"><p style="margin:14px 0 0;color:#6f6256;font-size:13px">Mostra questo QR all’ingresso. È allegato anche come immagine.</p></div><p style="margin:34px 0"><a href="${copy.link}" style="display:inline-block;background:#0e2d4f;color:white;text-decoration:none;padding:15px 22px;letter-spacing:.1em;text-transform:uppercase;font-size:12px">${escapeHtml(copy.cta)}</a></p><p style="font-size:13px;color:#6f6256">Codice registrazione: ${escapeHtml(guest.registrationCode)}</p></div></body></html>`;
   const response = await fetch('https://api.resend.com/emails', {
     method:'POST',
-    headers:{Authorization:`Bearer ${apiKey}`,'Content-Type':'application/json'},
-    body:JSON.stringify({from,to:[guest.email],subject:copy.subject,html}),
+    headers:{
+      Authorization:`Bearer ${apiKey}`,
+      'Content-Type':'application/json',
+      // Keep retries from creating a second confirmation email.
+      'Idempotency-Key':`damai-${type}-${guest.registrationCode}`,
+    },
+    body:JSON.stringify({
+      from,
+      to:[guest.email],
+      ...(process.env.EMAIL_REPLY_TO ? { reply_to: process.env.EMAIL_REPLY_TO } : {}),
+      subject:copy.subject,
+      html,
+      attachments:[{
+        filename:'DAMAI-QR.png',
+        content:qrContent,
+        content_type:'image/png',
+        content_id:'damai-qr-code',
+      }],
+    }),
   });
   const data = await response.json().catch(()=>({}));
   if (!response.ok) throw new Error(`Resend ${response.status}: ${JSON.stringify(data)}`);
