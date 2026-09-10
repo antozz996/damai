@@ -17,7 +17,7 @@ Sistema full-stack per gli Open Days DAMAI del **30-31 ottobre e 1 novembre 2026
 - Tracking UTM e provenienza lead
 - Log degli eventi della registrazione
 - Coda comunicazioni email + WhatsApp
-- Conferma immediata, reminder 48h, reminder 24h, thank-you post evento
+- Conferma email immediata con QR allegato, reminder 48h, reminder 24h, thank-you post evento
 - Retry automatico delle comunicazioni fallite
 - Informativa privacy dedicata Open Days
 
