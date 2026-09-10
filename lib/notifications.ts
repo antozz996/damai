@@ -16,7 +16,7 @@ function baseUrl() {
 }
 
 function ticketUrl(guest: Guest) {
-  return `${baseUrl()}/ticket/${guest.qrToken}`;
+  return `${baseUrl()}?ticket=${encodeURIComponent(guest.qrToken)}`;
 }
 
 function prettyDate(value: string) {
