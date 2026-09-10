@@ -12,7 +12,7 @@ type Guest = {
 };
 
 function baseUrl() {
-  return (process.env.PUBLIC_BASE_URL || '').replace(/\/$/, '');
+  return 'https://damai-rouge.vercel.app';
 }
 
 function ticketUrl(guest: Guest) {
