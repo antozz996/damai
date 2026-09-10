@@ -33,6 +33,10 @@ export async function POST(req: NextRequest) {
       if (row.status === 'checked_in') {
         await client.query(`UPDATE registrations SET status='exited', checked_out_at=now(), updated_at=now() WHERE id=$1`, [row.id]);
         await client.query(`INSERT INTO registration_events (registration_id,event_type,metadata) VALUES ($1,'checked_out','{}'::jsonb)`, [row.id]);
+        await client.query(`
+          INSERT INTO communications (registration_id, channel, message_type, status, scheduled_for)
+          VALUES ($1, 'email', 'exit_thank_you', 'queued', now())
+        `, [row.id]);
       }
       return { ok:true as const, next:'exit' as const };
     }
