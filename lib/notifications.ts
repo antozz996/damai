@@ -1,4 +1,4 @@
-type CommunicationType = 'registration_confirmation' | 'reminder_48h' | 'reminder_24h' | 'thank_you';
+type CommunicationType = 'registration_confirmation' | 'reminder_48h' | 'reminder_24h' | 'thank_you' | 'exit_thank_you';
 
 type Guest = {
   firstName: string;
@@ -27,6 +27,12 @@ function emailCopy(type: CommunicationType, guest: Guest) {
   const date = prettyDate(guest.eventDate);
   const time = guest.startTime.slice(0,5);
   const link = ticketUrl(guest);
+  if (type === 'exit_thank_you') return {
+    subject: 'DAMAI · Grazie per averci visitato',
+    heading: 'Grazie per aver vissuto DAMAI con noi.',
+    text: 'È stato un piacere accoglierti. Se vuoi approfondire il tuo evento o fissare un appuntamento, il nostro team è a tua disposizione.',
+    cta: 'Ricontatta il team DAMAI', link: 'https://www.damaigarden.it/#contatti',
+  };
   if (type === 'registration_confirmation') return {
     subject: 'DAMAI Open Days · Registrazione confermata',
     heading: 'La tua visita è confermata.',
