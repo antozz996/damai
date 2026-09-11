@@ -68,12 +68,8 @@ export async function POST(req: NextRequest) {
           VALUES
             ('email','registration_confirmation',now()),
             ('whatsapp','registration_confirmation',now()),
-            ('email','reminder_48h',((s.event_date + s.start_time) AT TIME ZONE 'Europe/Rome') - interval '48 hours'),
-            ('whatsapp','reminder_48h',((s.event_date + s.start_time) AT TIME ZONE 'Europe/Rome') - interval '48 hours'),
             ('email','reminder_24h',((s.event_date + s.start_time) AT TIME ZONE 'Europe/Rome') - interval '24 hours'),
-            ('whatsapp','reminder_24h',((s.event_date + s.start_time) AT TIME ZONE 'Europe/Rome') - interval '24 hours'),
-            ('email','thank_you',((s.event_date + time '12:00') AT TIME ZONE 'Europe/Rome') + interval '1 day'),
-            ('whatsapp','thank_you',((s.event_date + time '12:00') AT TIME ZONE 'Europe/Rome') + interval '1 day')
+            ('whatsapp','reminder_24h',((s.event_date + s.start_time) AT TIME ZONE 'Europe/Rome') - interval '24 hours')
         ) AS q(channel,message_type,scheduled_for)
         WHERE s.id=$2
       `,[registrationId,d.slotId]);

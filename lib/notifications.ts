@@ -17,6 +17,15 @@ function baseUrl() {
   return (process.env.PUBLIC_BASE_URL || 'https://damai-rouge.vercel.app').replace(/\/$/, '');
 }
 
+const BRAND = {
+  ink: '#102f52',
+  blue: '#174b82',
+  gold: '#b4862f',
+  paper: '#f8f0e4',
+  cream: '#e7dcce',
+  line: '#cdbda8',
+};
+
 function ticketUrl(guest: Guest) {
   return `${baseUrl()}/ticket/${guest.qrToken}`;
 }
@@ -78,14 +87,22 @@ function emailCopy(type: CommunicationType, guest: Guest) {
 function renderEmailHtml(type: CommunicationType, guest: Guest, copy: ReturnType<typeof emailCopy>, qrCid: string) {
   const firstName = escapeHtml(guest.firstName);
   const registrationCode = escapeHtml(guest.registrationCode);
-  const preheader = type === 'exit_thank_you'
+  const isExit = type === 'exit_thank_you';
+  const isReminder = type === 'reminder_24h';
+  const preheader = isExit
     ? 'Grazie per aver vissuto La Dolce Vita con DAMAI.'
-    : 'Il tuo pass personale per gli Open Days DAMAI.';
+    : isReminder
+      ? 'Domani ti aspettiamo per La Dolce Vita Open Days.'
+      : 'Il tuo pass personale per La Dolce Vita Open Days.';
   const imageBase = baseUrl();
   const link = escapeHtml(copy.link);
   const heading = escapeHtml(copy.heading);
   const text = escapeHtml(copy.text);
   const cta = escapeHtml(copy.cta);
+  const date = escapeHtml(prettyDate(guest.eventDate));
+  const time = escapeHtml(guest.startTime.slice(0,5));
+  const eyebrow = isExit ? 'GRAZIE DI CUORE' : isReminder ? 'DOMANI · OPEN DAYS' : 'REGISTRAZIONE CONFERMATA';
+  const logoUrl = `${imageBase}/damai/ldv/logo-original.svg`;
 
   return `<!doctype html>
 <html lang="it">
@@ -97,47 +114,50 @@ function renderEmailHtml(type: CommunicationType, guest: Guest, copy: ReturnType
       @media only screen and (max-width: 640px) {
         .email-shell { width: 100% !important; }
         .email-pad { padding-left: 22px !important; padding-right: 22px !important; }
-        .email-title { font-size: 34px !important; }
+        .email-title { font-size: 32px !important; }
+        .email-logo { width: 184px !important; }
+        .email-card { padding-left: 18px !important; padding-right: 18px !important; }
         .email-hero { height: 170px !important; object-fit: cover !important; }
       }
     </style>
   </head>
-  <body style="margin:0;padding:0;background:#e7dcce;color:#132f50;font-family:Georgia,'Times New Roman',serif;-webkit-text-size-adjust:100%;">
+  <body style="margin:0;padding:0;background:${BRAND.cream};color:${BRAND.ink};font-family:Georgia,'Times New Roman',serif;-webkit-text-size-adjust:100%;">
     <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">${preheader}</div>
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#e7dcce;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${BRAND.cream};">
       <tr>
         <td align="center" style="padding:22px 10px;">
-          <table role="presentation" class="email-shell" width="620" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:620px;background:#f8f0e4;border:1px solid #cdbda8;">
+          <table role="presentation" class="email-shell" width="620" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:620px;background:${BRAND.paper};border:1px solid ${BRAND.line};">
             <tr>
               <td style="padding:0;line-height:0;">
                 <img src="${imageBase}/damai/ldv/up-frame.png" width="620" alt="" style="display:block;width:100%;height:auto;border:0;">
               </td>
             </tr>
             <tr>
-              <td class="email-pad" align="center" style="padding:34px 52px 8px;">
-                <div style="font-family:Didot,'Bodoni 72','Bodoni Moda',Georgia,serif;font-size:42px;line-height:1;letter-spacing:.16em;color:#111111;">DAMAI</div>
-                <div style="margin-top:13px;font-size:11px;line-height:1.4;letter-spacing:.34em;text-transform:uppercase;color:#b4862f;">La Dolce Vita&nbsp; · &nbsp;Open Days 2026</div>
-                <div style="width:82px;height:1px;margin:23px auto 0;background:#132f50;"></div>
+              <td class="email-pad" align="center" style="padding:26px 52px 8px;">
+                <div style="font-family:Didot,'Bodoni 72','Bodoni Moda',Georgia,serif;font-size:39px;line-height:1;letter-spacing:.16em;color:#111111;">DAMAI</div>
+                <img class="email-logo" src="${logoUrl}" width="220" alt="La Dolce Vita" style="display:block;width:220px;max-width:100%;height:auto;margin:14px auto 0;border:0;">
+                <div style="margin-top:14px;font-size:10px;line-height:1.4;letter-spacing:.32em;text-transform:uppercase;color:${BRAND.gold};">Open Days 2026</div>
+                <div style="width:82px;height:1px;margin:20px auto 0;background:${BRAND.ink};"></div>
               </td>
             </tr>
             <tr>
               <td class="email-pad" align="center" style="padding:24px 52px 0;">
-                <div style="font-family:'Brush Script MT','Segoe Script',cursive;font-size:28px;line-height:1.1;color:#174b82;">La Dolce Vita</div>
-                <h1 class="email-title" style="margin:18px 0 18px;font-family:Didot,'Bodoni 72','Bodoni Moda',Georgia,serif;font-size:42px;line-height:1.08;font-weight:400;color:#132f50;">${heading}</h1>
-                <p style="margin:0;font-size:18px;line-height:1.65;color:#3c332c;">Ciao ${firstName},<br>${text}</p>
+                <div style="font-size:10px;line-height:1.4;letter-spacing:.28em;text-transform:uppercase;color:${BRAND.gold};">${eyebrow}</div>
+                <h1 class="email-title" style="margin:17px 0 17px;font-family:Didot,'Bodoni 72','Bodoni Moda',Georgia,serif;font-size:42px;line-height:1.08;font-weight:400;color:${BRAND.ink};">${heading}</h1>
+                <p style="margin:0;font-size:18px;line-height:1.6;color:#3c332c;">Ciao ${firstName},<br>${text}</p>
               </td>
             </tr>
-            ${type === 'exit_thank_you' ? `<tr><td style="padding:28px 32px 0;"><img class="email-hero" src="${imageBase}/damai/hero-exterior.webp" width="556" height="210" alt="Il giardino DAMAI" style="display:block;width:100%;height:210px;object-fit:cover;border:0;"></td></tr>` : ''}
-            ${type === 'exit_thank_you' ? '' : `<tr><td align="center" style="padding:28px 32px 0;"><div style="padding:20px;background:#ffffff;border:1px solid #d6c7b5;"><img src="cid:${qrCid}" width="240" height="240" alt="QR code personale DAMAI" style="display:block;width:240px;height:240px;margin:0 auto;border:0;"><p style="margin:14px 0 0;font-size:13px;line-height:1.4;color:#6f6256;">Mostra questo QR all’ingresso.<br>È allegato anche come immagine.</p></div></td></tr>`}
+            ${isExit ? `<tr><td style="padding:28px 32px 0;"><img class="email-hero" src="${imageBase}/damai/hero-exterior.webp" width="556" height="210" alt="Il giardino DAMAI" style="display:block;width:100%;height:210px;object-fit:cover;border:0;"></td></tr>` : `<tr><td class="email-card" align="center" style="padding:28px 32px 0;"><div style="padding:20px;background:#ffffff;border:1px solid #d6c7b5;"><img src="cid:${qrCid}" width="240" height="240" alt="QR code personale DAMAI" style="display:block;width:240px;height:240px;margin:0 auto;border:0;"><p style="margin:14px 0 0;font-size:13px;line-height:1.4;color:#6f6256;">Mostra questo QR all’ingresso.<br>È allegato anche come immagine.</p></div></td></tr>`}
+            ${!isExit ? `<tr><td class="email-pad" align="center" style="padding:22px 52px 0;"><table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-top:1px solid ${BRAND.line};border-bottom:1px solid ${BRAND.line};"><tr><td style="padding:15px 8px;text-align:center;font-size:14px;color:#5e5147;"><span style="display:block;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:${BRAND.gold};">Giorno</span><strong style="display:block;margin-top:5px;color:${BRAND.ink};font-weight:400;">${date}</strong></td><td style="padding:15px 8px;text-align:center;font-size:14px;color:#5e5147;border-left:1px solid ${BRAND.line};"><span style="display:block;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:${BRAND.gold};">Arrivo</span><strong style="display:block;margin-top:5px;color:${BRAND.ink};font-weight:400;">${time}</strong></td></tr></table></td></tr>` : ''}
             <tr>
               <td align="center" style="padding:30px 52px 0;">
-                <a href="${link}" style="display:inline-block;padding:16px 25px;background:#123c67;color:#ffffff;text-decoration:none;font-size:12px;line-height:1;letter-spacing:.16em;text-transform:uppercase;">${cta}</a>
+                <a href="${link}" style="display:inline-block;padding:16px 25px;background:${BRAND.ink};color:#ffffff;text-decoration:none;font-size:12px;line-height:1;letter-spacing:.16em;text-transform:uppercase;">${cta}</a>
               </td>
             </tr>
             <tr>
               <td class="email-pad" align="center" style="padding:27px 52px 36px;">
-                <div style="width:82px;height:1px;margin:0 auto 20px;background:#b4862f;"></div>
-                <p style="margin:0;font-size:13px;line-height:1.5;color:#6f6256;">Codice registrazione: <strong style="color:#132f50;">${registrationCode}</strong></p>
+                <div style="width:82px;height:1px;margin:0 auto 20px;background:${BRAND.gold};"></div>
+                <p style="margin:0;font-size:13px;line-height:1.5;color:#6f6256;">Codice registrazione: <strong style="color:${BRAND.ink};">${registrationCode}</strong></p>
                 <p style="margin:10px 0 0;font-size:12px;line-height:1.5;color:#817468;">DAMAI Event Garden · Via Marina di Varcaturo</p>
               </td>
             </tr>
