@@ -11,8 +11,8 @@ export async function POST(req: NextRequest) {
   if (!['entry','exit','gift'].includes(action)) return new NextResponse('Azione non valida', { status: 400 });
 
   const result = await transaction(async client => {
-    const found = await client.query<{id:string; status:string; cadeau_delivered_at:string|null}>(
-      `SELECT id::text, status, cadeau_delivered_at::text
+    const found = await client.query<{id:string; status:string; cadeau_delivered_at:string|null; slot_id:string}>(
+      `SELECT id::text, status, cadeau_delivered_at::text, slot_id::text
        FROM registrations WHERE qr_token=$1::uuid FOR UPDATE`, [token]
     );
     if (!found.rowCount) return { ok:false as const, code:404, message:'Registrazione non trovata' };
@@ -35,8 +35,10 @@ export async function POST(req: NextRequest) {
         await client.query(`INSERT INTO registration_events (registration_id,event_type,metadata) VALUES ($1,'checked_out','{}'::jsonb)`, [row.id]);
         await client.query(`
           INSERT INTO communications (registration_id, channel, message_type, status, scheduled_for)
-          VALUES ($1, 'email', 'exit_thank_you', 'queued', now())
-        `, [row.id]);
+          SELECT $1, 'email', 'exit_thank_you', 'queued',
+            ((s.event_date + time '09:00') AT TIME ZONE 'Europe/Rome') + interval '1 day'
+          FROM open_day_slots s WHERE s.id=$2
+        `, [row.id, row.slot_id]);
       }
       return { ok:true as const, next:'exit' as const };
     }
