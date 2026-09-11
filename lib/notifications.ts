@@ -31,7 +31,7 @@ const BRAND = {
 };
 
 function ticketUrl(guest: Guest) {
-  return `${baseUrl()}/ticket/${guest.qrToken}`;
+  return `${baseUrl()}?ticket=${encodeURIComponent(guest.qrToken)}`;
 }
 
 function checkinUrl(guest: Guest) {
@@ -98,7 +98,7 @@ function renderEmailHtml(type: CommunicationType, guest: Guest, copy: ReturnType
     : isReminder
       ? 'Domani ti aspettiamo per La Dolce Vita Open Days.'
       : 'Il tuo pass personale per La Dolce Vita Open Days.';
-  const imageBase = baseUrl();
+  const imageBase = staffBaseUrl();
   const link = escapeHtml(copy.link);
   const heading = escapeHtml(copy.heading);
   const text = escapeHtml(copy.text);
