@@ -84,7 +84,7 @@ export default function RegistrationForm() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Registrazione non riuscita.');
-      window.location.href = `/ticket/${data.qrToken}`;
+      window.location.href = `/open-days?ticket=${encodeURIComponent(data.qrToken)}`;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registrazione non riuscita.');
       setLoading(false);
