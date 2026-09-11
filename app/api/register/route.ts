@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { randomBytes } from 'crypto';
-import { transaction } from '@/lib/db';
+import { query, transaction } from '@/lib/db';
 import { registrationSchema } from '@/lib/validation';
+import { Guest, sendEmail } from '@/lib/notifications';
 
 function makeCode() {
   return `D26-${randomBytes(4).toString('hex').toUpperCase()}`;
@@ -17,8 +18,9 @@ export async function POST(req: NextRequest) {
 
     const d = parsed.data;
     const result = await transaction(async client => {
-      const slot = await client.query<{ id:string; capacity:number }>(
-        `SELECT id, capacity FROM open_day_slots WHERE id=$1 AND is_active=true FOR UPDATE`,
+      const slot = await client.query<{ id:string; capacity:number; event_date:string; start_time:string }>(
+        `SELECT id, capacity, event_date::text, start_time::text
+         FROM open_day_slots WHERE id=$1 AND is_active=true FOR UPDATE`,
         [d.slotId]
       );
       if (!slot.rowCount) throw new Error('SLOT_NOT_FOUND');
@@ -76,10 +78,45 @@ export async function POST(req: NextRequest) {
         WHERE s.id=$2
       `,[registrationId,d.slotId]);
 
-      return { registrationCode, qrToken: insert.rows[0].qr_token };
+      return {
+        registrationId,
+        registrationCode,
+        qrToken: insert.rows[0].qr_token,
+        guest: {
+          firstName: d.firstName,
+          lastName: d.lastName,
+          phone: d.phone,
+          email: d.email.toLowerCase(),
+          registrationCode,
+          qrToken: insert.rows[0].qr_token,
+          eventDate: slot.rows[0].event_date,
+          startTime: slot.rows[0].start_time,
+        } satisfies Guest,
+      };
     });
 
-    return NextResponse.json(result, { status: 201 });
+    try {
+      const emailResult = await sendEmail('registration_confirmation', result.guest);
+      if (emailResult.sent) {
+        await query(
+          `UPDATE communications
+           SET status='sent', provider_message_id=$1, sent_at=now(), attempts=attempts+1, last_error=NULL
+           WHERE registration_id=$2 AND channel='email' AND message_type='registration_confirmation' AND status='queued'`,
+          [emailResult.providerId || null, result.registrationId],
+        );
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message.slice(0, 1500) : 'Unknown error';
+      console.error('Immediate confirmation email failed', message);
+      await query(
+        `UPDATE communications
+         SET attempts=attempts+1, last_error=$1
+         WHERE registration_id=$2 AND channel='email' AND message_type='registration_confirmation' AND status='queued'`,
+        [message, result.registrationId],
+      );
+    }
+
+    return NextResponse.json({ registrationCode: result.registrationCode, qrToken: result.qrToken }, { status: 201 });
   } catch (error) {
     if (error instanceof Error && error.message === 'SLOT_FULL') {
       return NextResponse.json({ error: 'Questa fascia si è appena completata. Scegli un altro orario.' }, { status: 409 });
