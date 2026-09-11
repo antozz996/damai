@@ -96,16 +96,16 @@ export default function RegistrationForm() {
   return (
     <form onSubmit={submit} className="form-main">
       <div className="grid">
-        <div className="field"><label>Nome *</label><input name="firstName" required minLength={2} autoComplete="given-name" /></div>
-        <div className="field"><label>Cognome *</label><input name="lastName" required minLength={2} autoComplete="family-name" /></div>
-        <div className="field"><label>Telefono *</label><input name="phone" type="tel" required autoComplete="tel" /></div>
-        <div className="field"><label>Email *</label><input name="email" type="email" required autoComplete="email" /></div>
-        <div className="field"><label>Tipologia di evento *</label><select name="eventType" required defaultValue=""><option value="" disabled>Seleziona</option>{EVENT_TYPES.map(x => <option key={x}>{x}</option>)}</select></div>
-        <div className="field"><label>Data prevista dell'evento</label><input name="plannedEventDate" type="date" /></div>
-        <div className="field"><label>Numero indicativo ospiti</label><input name="guestCount" type="number" min="1" max="1000" placeholder="Es. 120" /></div>
-        <div className="field"><label>Accompagnatori Open Day</label><select name="companions" defaultValue="0">{Array.from({length:6},(_,i)=><option value={i} key={i}>{i}</option>)}</select></div>
-        <div className="field full"><label>Come hai conosciuto l'evento?</label><select name="source" defaultValue=""><option value="">Seleziona</option><option>Instagram</option><option>Facebook</option><option>Google</option><option>Passaparola</option><option>Già cliente / già visitato DAMAI</option><option>Altro</option></select></div>
-        <div className="field full"><label>Note o esigenze particolari</label><textarea name="notes" placeholder="Facoltativo" /></div>
+        <div className="field"><label htmlFor="firstName">Nome *</label><input id="firstName" name="firstName" required minLength={2} autoComplete="given-name" /></div>
+        <div className="field"><label htmlFor="lastName">Cognome *</label><input id="lastName" name="lastName" required minLength={2} autoComplete="family-name" /></div>
+        <div className="field"><label htmlFor="phone">Telefono *</label><input id="phone" name="phone" type="tel" required autoComplete="tel" /></div>
+        <div className="field"><label htmlFor="email">Email *</label><input id="email" name="email" type="email" required autoComplete="email" /></div>
+        <div className="field"><label htmlFor="eventType">Tipologia di evento *</label><select id="eventType" name="eventType" required defaultValue=""><option value="" disabled>Seleziona</option>{EVENT_TYPES.map(x => <option key={x}>{x}</option>)}</select></div>
+        <div className="field"><label htmlFor="plannedEventDate">Data prevista dell'evento</label><input id="plannedEventDate" name="plannedEventDate" type="date" /></div>
+        <div className="field"><label htmlFor="guestCount">Numero indicativo ospiti</label><input id="guestCount" name="guestCount" type="number" min="1" max="1000" placeholder="Es. 120" /></div>
+        <div className="field"><label htmlFor="companions">Accompagnatori Open Day</label><select id="companions" name="companions" defaultValue="0">{Array.from({length:6},(_,i)=><option value={i} key={i}>{i}</option>)}</select></div>
+        <div className="field full"><label htmlFor="source">Come hai conosciuto l'evento?</label><select id="source" name="source" defaultValue=""><option value="">Seleziona</option><option>Instagram</option><option>Facebook</option><option>Google</option><option>Passaparola</option><option>Già cliente / già visitato DAMAI</option><option>Altro</option></select></div>
+        <div className="field full"><label htmlFor="notes">Note o esigenze particolari</label><textarea id="notes" name="notes" placeholder="Facoltativo" /></div>
         <div className="field full slots-area">
           <label>Giorno e fascia oraria di arrivo *</label>
           <p className="info">L'orario selezionato è l'orario di arrivo, non la durata della visita. La disponibilità viene aggiornata in tempo reale.</p>
@@ -115,16 +115,16 @@ export default function RegistrationForm() {
             <div key={day}>
               <div className="day-title">{formatDay(day)}</div>
               <div className="slot-grid">
-                {daySlots.map(slot => <button type="button" key={slot.id} disabled={slot.remaining <= 0} className={`slot ${slotId===slot.id?'active':''}`} onClick={()=>setSlotId(slot.id)}>{slot.startTime.slice(0,5)}{slot.remaining <= 3 && slot.remaining > 0 ? ` · ${slot.remaining} posti` : ''}{slot.remaining <= 0 ? ' · Completo' : ''}</button>)}
+                {daySlots.map(slot => <button type="button" key={slot.id} disabled={slot.remaining <= 0} aria-pressed={slotId===slot.id} className={`slot ${slotId===slot.id?'active':''}`} onClick={()=>setSlotId(slot.id)}>{slot.startTime.slice(0,5)}{slot.remaining <= 3 && slot.remaining > 0 ? ` · ${slot.remaining} posti` : ''}{slot.remaining <= 0 ? ' · Completo' : ''}</button>)}
               </div>
             </div>
           ))}
         </div>
         <div className="field full checks">
-          <label className="check"><input name="privacyConsent" type="checkbox" required /> <span>Ho letto l'informativa privacy e acconsento al trattamento dei dati necessario alla gestione della registrazione e della visita. *</span></label>
+          <label className="check"><input name="privacyConsent" type="checkbox" required /> <span>Ho letto l’<a href="/privacy" target="_blank" rel="noopener noreferrer">informativa privacy</a> e acconsento al trattamento dei dati necessario alla gestione della registrazione e della visita. *</span></label>
           <label className="check"><input name="marketingConsent" type="checkbox" /> <span>Acconsento a ricevere comunicazioni commerciali e aggiornamenti da DAMAI. Facoltativo.</span></label>
         </div>
-        {error && <div className="field full error">{error}</div>}
+        {error && <div className="field full error" role="alert">{error}</div>}
         <div className="field full"><button className="submit" disabled={loading || slotsLoading || Boolean(slotsError)}>{loading ? 'Registrazione in corso…' : slotsLoading ? 'Caricamento orari…' : 'Invia la registrazione'}</button></div>
       </div>
     </form>
