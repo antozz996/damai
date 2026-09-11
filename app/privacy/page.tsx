@@ -26,7 +26,7 @@ export default function PrivacyPage() {
       <h2>6. Diritti</h2>
       <p>Puoi chiedere accesso, rettifica, cancellazione, limitazione, portabilità, opposizione e revoca del consenso, nei casi previsti dagli artt. 15-22 GDPR, contattando il Titolare. Resta fermo il diritto di proporre reclamo al Garante per la protezione dei dati personali.</p>
 
-      <p style={{marginTop:50}}><a href="/">← Torna alla registrazione</a></p>
+      <p style={{marginTop:50}}><a href="/open-days">← Torna alla registrazione</a></p>
     </main>
   );
 }

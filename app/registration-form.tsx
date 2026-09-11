@@ -121,7 +121,7 @@ export default function RegistrationForm() {
           ))}
         </div>
         <div className="field full checks">
-          <label className="check"><input name="privacyConsent" type="checkbox" required /> <span>Ho letto l’<a href="/privacy" target="_blank" rel="noopener noreferrer">informativa privacy</a> e acconsento al trattamento dei dati necessario alla gestione della registrazione e della visita. *</span></label>
+          <label className="check"><input name="privacyConsent" type="checkbox" required /> <span>Ho letto l’<a href="/open-days/privacy" target="_blank" rel="noopener noreferrer">informativa privacy</a> e acconsento al trattamento dei dati necessario alla gestione della registrazione e della visita. *</span></label>
           <label className="check"><input name="marketingConsent" type="checkbox" /> <span>Acconsento a ricevere comunicazioni commerciali e aggiornamenti da DAMAI. Facoltativo.</span></label>
         </div>
         {error && <div className="field full error" role="alert">{error}</div>}

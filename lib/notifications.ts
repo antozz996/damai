@@ -14,7 +14,11 @@ type Guest = {
 };
 
 function baseUrl() {
-  return (process.env.PUBLIC_BASE_URL || 'https://damai-rouge.vercel.app').replace(/\/$/, '');
+  return (process.env.PUBLIC_BASE_URL || 'https://www.damaigarden.it/open-days').replace(/\/$/, '');
+}
+
+function staffBaseUrl() {
+  return (process.env.STAFF_BASE_URL || 'https://damai-rouge.vercel.app').replace(/\/$/, '');
 }
 
 const BRAND = {
@@ -31,7 +35,7 @@ function ticketUrl(guest: Guest) {
 }
 
 function checkinUrl(guest: Guest) {
-  return `${baseUrl()}/admin/checkin/${guest.qrToken}`;
+  return `${staffBaseUrl()}/admin/checkin/${guest.qrToken}`;
 }
 
 function escapeHtml(value: string) {
@@ -260,3 +264,4 @@ export async function sendWhatsApp(type: CommunicationType, guest: Guest) {
 }
 
 export type { CommunicationType, Guest };
+

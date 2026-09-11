@@ -126,7 +126,7 @@ export default function HomePage() {
       <footer className="ldv-footer">
         <span className="ldv-nav-brand"><DamaiLogo /></span>
         <p>Open Days 2026 · La Dolce Vita</p>
-        <a href="/privacy">Informativa privacy</a>
+        <a href="/open-days/privacy">Informativa privacy</a>
       </footer>
     </main>
   );

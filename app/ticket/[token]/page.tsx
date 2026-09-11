@@ -28,7 +28,8 @@ export default async function TicketPage({ params }: { params: Promise<{ token: 
   if (!result.rowCount) notFound();
   const r = result.rows[0];
 
-  const checkinUrl = `https://damai-rouge.vercel.app/admin/checkin/${token}`;
+  const staffBaseUrl = (process.env.STAFF_BASE_URL || 'https://damai-rouge.vercel.app').replace(/\/$/, '');
+  const checkinUrl = `${staffBaseUrl}/admin/checkin/${token}`;
   const qr = await QRCode.toDataURL(checkinUrl, { width: 520, margin: 1, errorCorrectionLevel: 'M' });
   const date = new Intl.DateTimeFormat('it-IT', { weekday:'long', day:'numeric', month:'long', year:'numeric' }).format(new Date(`${r.event_date}T12:00:00`));
 

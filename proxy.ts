@@ -1,6 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 export function proxy(request: NextRequest) {
+  const pathname = request.nextUrl.pathname;
+  if ((pathname === '/open-days' || pathname.startsWith('/open-days/'))
+    && !pathname.startsWith('/open-days/admin')
+    && !pathname.startsWith('/open-days/api/admin')) {
+    const rewritten = request.nextUrl.clone();
+    rewritten.pathname = pathname.slice('/open-days'.length) || '/';
+    return NextResponse.rewrite(rewritten);
+  }
+
   const user = process.env.ADMIN_USER;
   const pass = process.env.ADMIN_PASSWORD;
 
@@ -26,5 +35,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/api/admin/:path*'],
+  matcher: ['/admin/:path*', '/api/admin/:path*', '/open-days', '/open-days/:path*'],
 };
