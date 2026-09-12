@@ -9,6 +9,8 @@ Il form registra l'ospite e genera un codice univoco. Quando le variabili email 
 
 Il QR apre la scheda di check-in dello staff. La pagina è protetta dalle credenziali dell'area amministrativa; le ragazze devono usare il link dello scanner `/admin/checkin`.
 
+I tre template transazionali usano i marchi ufficiali, senza testo ricreato: `public/damai/logo-email.png` (DAMAI Event Garden, estratto dal PDF ufficiale) e `public/damai/ldv/logo-email.png` (La Dolce Vita). Il ringraziamento post-uscita usa la frase: “Grazie per aver vissuto con noi questa magnifica esperienza”.
+
 ## 1. Verifica il dominio in Resend
 
 1. Apri [Resend Domains](https://resend.com/domains) e aggiungi il dominio che userai nel mittente, ad esempio `damaigarden.it`.
@@ -25,7 +27,7 @@ Nel progetto Vercel `damai`, apri **Settings → Environment Variables**. Per i 
 | `RESEND_API_KEY` | Secret | La chiave `re_...` di Resend |
 | `EMAIL_FROM` | Config | `DAMAI Open Days <eventi@damaigarden.it>` |
 | `EMAIL_REPLY_TO` | Config, opzionale | L'indirizzo a cui rispondere, ad esempio `info@damaigarden.it` |
-| `PUBLIC_BASE_URL` | Config | `https://damai-rouge.vercel.app` oppure il dominio definitivo |
+| `PUBLIC_BASE_URL` | Config | `https://www.damaigarden.it/open-days` |
 | `DATABASE_URL` | Secret | La stringa Neon di produzione |
 | `ADMIN_USER` | Secret | Utente dello staff |
 | `ADMIN_PASSWORD` | Secret | Password dello staff |

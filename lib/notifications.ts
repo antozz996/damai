@@ -58,9 +58,9 @@ function emailCopy(type: CommunicationType, guest: Guest) {
   const link = ticketUrl(guest);
   if (type === 'exit_thank_you') return {
     subject: 'DAMAI · Grazie per averci visitato',
-    heading: 'Grazie per aver vissuto DAMAI con noi.',
-    text: 'È stato un piacere accoglierti. Se vuoi approfondire il tuo evento o fissare un appuntamento, il nostro team è a tua disposizione.',
-    cta: 'Ricontatta il team DAMAI', link: 'https://www.damaigarden.it/#contatti',
+    heading: 'Grazie per aver vissuto con noi questa magnifica esperienza',
+    text: 'È stato un piacere accoglierti al Damai. Se vuoi approfondire il tuo evento o fissare un appuntamento, il nostro team è a tua disposizione.',
+    cta: 'Ricontatta il team al Damai', link: 'https://www.damaigarden.it/#contatti',
   };
   if (type === 'registration_confirmation') return {
     subject: 'DAMAI Open Days · Registrazione confermata',
@@ -71,12 +71,12 @@ function emailCopy(type: CommunicationType, guest: Guest) {
   if (type === 'reminder_48h') return {
     subject: 'DAMAI Open Days · Mancano 48 ore',
     heading: 'La Dolce Vita è quasi qui.',
-    text: `Ti ricordiamo la tua visita DAMAI di ${date} alle ${time}.`,
+    text: `Ti ricordiamo la tua visita al Damai di ${date} alle ${time}.`,
     cta: 'Rivedi il tuo pass', link,
   };
   if (type === 'reminder_24h') return {
     subject: 'DAMAI Open Days · Ti aspettiamo domani',
-    heading: 'Ci vediamo presto da DAMAI.',
+    heading: 'Ci vediamo presto al Damai.',
     text: `La tua fascia di arrivo è ${date} alle ${time}. Tieni a portata di mano il QR personale.`,
     cta: 'Apri il QR', link,
   };
@@ -94,7 +94,7 @@ function renderEmailHtml(type: CommunicationType, guest: Guest, copy: ReturnType
   const isExit = type === 'exit_thank_you';
   const isReminder = type === 'reminder_24h';
   const preheader = isExit
-    ? 'Grazie per aver vissuto La Dolce Vita con DAMAI.'
+    ? 'Grazie per aver vissuto con noi questa magnifica esperienza.'
     : isReminder
       ? 'Domani ti aspettiamo per La Dolce Vita Open Days.'
       : 'Il tuo pass personale per La Dolce Vita Open Days.';
@@ -106,7 +106,8 @@ function renderEmailHtml(type: CommunicationType, guest: Guest, copy: ReturnType
   const date = escapeHtml(prettyDate(guest.eventDate));
   const time = escapeHtml(guest.startTime.slice(0,5));
   const eyebrow = isExit ? 'GRAZIE DI CUORE' : isReminder ? 'DOMANI · OPEN DAYS' : 'REGISTRAZIONE CONFERMATA';
-  const logoUrl = `${imageBase}/damai/ldv/logo-original.svg`;
+  const damaiLogoUrl = `${imageBase}/damai/logo-email.png`;
+  const ldvLogoUrl = `${imageBase}/damai/ldv/logo-email.png`;
 
   return `<!doctype html>
 <html lang="it">
@@ -119,7 +120,8 @@ function renderEmailHtml(type: CommunicationType, guest: Guest, copy: ReturnType
         .email-shell { width: 100% !important; }
         .email-pad { padding-left: 22px !important; padding-right: 22px !important; }
         .email-title { font-size: 32px !important; }
-        .email-logo { width: 184px !important; }
+        .email-brand-logo { width: 270px !important; }
+        .email-ldv-logo { width: 184px !important; }
         .email-card { padding-left: 18px !important; padding-right: 18px !important; }
         .email-hero { height: 170px !important; object-fit: cover !important; }
       }
@@ -138,8 +140,8 @@ function renderEmailHtml(type: CommunicationType, guest: Guest, copy: ReturnType
             </tr>
             <tr>
               <td class="email-pad" align="center" style="padding:26px 52px 8px;">
-                <div style="font-family:Didot,'Bodoni 72','Bodoni Moda',Georgia,serif;font-size:39px;line-height:1;letter-spacing:.16em;color:#111111;">DAMAI</div>
-                <img class="email-logo" src="${logoUrl}" width="220" alt="La Dolce Vita" style="display:block;width:220px;max-width:100%;height:auto;margin:14px auto 0;border:0;">
+                <img class="email-brand-logo" src="${damaiLogoUrl}" width="320" alt="DAMAI Event Garden" style="display:block;width:320px;max-width:100%;height:auto;margin:0 auto;border:0;">
+                <img class="email-ldv-logo" src="${ldvLogoUrl}" width="220" alt="La Dolce Vita" style="display:block;width:220px;max-width:100%;height:auto;margin:16px auto 0;border:0;">
                 <div style="margin-top:14px;font-size:10px;line-height:1.4;letter-spacing:.32em;text-transform:uppercase;color:${BRAND.gold};">Open Days 2026</div>
                 <div style="width:82px;height:1px;margin:20px auto 0;background:${BRAND.ink};"></div>
               </td>
@@ -264,4 +266,3 @@ export async function sendWhatsApp(type: CommunicationType, guest: Guest) {
 }
 
 export type { CommunicationType, Guest };
-
