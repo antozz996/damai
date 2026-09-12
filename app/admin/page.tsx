@@ -50,6 +50,7 @@ export default async function AdminPage() {
         </div>
         <div className="toolbar">
           <a href="/admin/checkin">Scanner QR ingresso</a>
+          <a href="/admin/emails">Test email</a>
           <a href="/api/admin/export">Esporta CSV</a>
           <a href="/api/slots" target="_blank">Disponibilità live</a>
           <a href="/">Apri landing</a>
