@@ -57,6 +57,13 @@ const quickLinks = [
     tone: 'cream',
   },
   {
+    href: '/admin/slots/overview',
+    eyebrow: 'Controllo presenze',
+    title: 'Prenotati per slot',
+    text: 'Vedi conteggio e nominativi per giorno e orario.',
+    tone: 'cream',
+  },
+  {
     href: '/admin/emails',
     eyebrow: 'Comunicazioni',
     title: 'Test email',

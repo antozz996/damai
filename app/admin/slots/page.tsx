@@ -15,7 +15,7 @@ export default async function SlotAdminPage() {
     <main className="admin"><div className="admin-inner">
       <div className="eyebrow">DAMAI · Configurazione</div>
       <h1>Fasce di ingresso</h1>
-      <div className="toolbar"><a href="/admin">← Dashboard</a><a href="/api/slots" target="_blank">Vista pubblica</a></div>
+      <div className="toolbar"><a href="/admin">← Dashboard</a><a href="/admin/slots/overview">Prenotati per slot</a><a href="/api/slots" target="_blank">Vista pubblica</a></div>
       <div className="table-wrap"><table className="table">
         <thead><tr><th>Giorno</th><th>Ora</th><th>Prenotati</th><th>Capienza</th><th>Stato</th><th>Aggiorna</th></tr></thead>
         <tbody>{result.rows.map(s => <tr key={s.id}>
