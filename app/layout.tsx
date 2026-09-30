@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import './scanner-mobile.css';
 import './home.css';
+import './admin/admin.css';
 
 export const metadata: Metadata = {
   title: 'DAMAI Open Days 2026 | La Dolce Vita',
