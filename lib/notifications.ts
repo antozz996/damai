@@ -180,7 +180,7 @@ function renderEmailHtml(type: CommunicationType, guest: Guest, copy: ReturnType
 </html>`;
 }
 
-export async function sendEmail(type: CommunicationType, guest: Guest) {
+export async function sendEmail(type: CommunicationType, guest: Guest, options: { idempotencyKey?: string } = {}) {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.EMAIL_FROM;
   if (!apiKey || !from || !baseUrl()) return { sent:false, reason:'email_not_configured' };
@@ -196,7 +196,7 @@ export async function sendEmail(type: CommunicationType, guest: Guest) {
     headers:{
       Authorization:`Bearer ${apiKey}`,
       'Content-Type':'application/json',
-      'Idempotency-Key':`damai-${type}-${guest.registrationCode}`,
+      'Idempotency-Key':options.idempotencyKey || `damai-${type}-${guest.registrationCode}`,
     },
     body:JSON.stringify({
       from,
