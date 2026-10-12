@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { query } from '@/lib/db';
 import RegistrationActions from '../actions';
+import ResendConfirmation from './resend-confirmation';
 
 export const dynamic = 'force-dynamic';
 
@@ -121,7 +122,8 @@ export default async function RegistrationEditPage({ params, searchParams }: { p
             <p><strong>Lead:</strong><br />{r.lead_stage}</p>
             <p><strong>QR token:</strong><br /><code>{r.qr_token}</code></p>
             <a className="admin-text-link" href={`/admin/checkin/${r.qr_token}`}>Apri scheda scanner →</a>
-            <div className="admin-side-note">La modifica non invia automaticamente una nuova email. Se cambi email o fascia, verifica il dato e usa il pannello “Test email” solo per una prova separata.</div>
+            <ResendConfirmation id={r.id} email={r.email} disabled={r.status === 'cancelled'} />
+            <div className="admin-side-note">Le modifiche ai dati non inviano email automaticamente. Salva prima l'indirizzo o la fascia corretti, poi reinvia la conferma da questa scheda.</div>
           </aside>
         </div>
 
