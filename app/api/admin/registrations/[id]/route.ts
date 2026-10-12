@@ -130,7 +130,7 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
       `, [id, data.slotId]);
       await client.query(`INSERT INTO registration_events (registration_id,event_type,metadata) VALUES ($1,'admin_updated',$2::jsonb)`, [id, JSON.stringify({ source: 'admin', slotId: data.slotId })]);
     });
-    return redirectToList(req, 'saved');
+    return redirectToEdit(req, id, 'saved');
   } catch (error) {
     if (error instanceof Error && error.message === 'NOT_FOUND') return new NextResponse('Registrazione non trovata', { status: 404 });
     if (error instanceof Error && error.message === 'SLOT_NOT_FOUND') return redirectToEdit(req, id, 'error=Fascia%20non%20trovata');
