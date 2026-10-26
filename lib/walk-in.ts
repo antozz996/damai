@@ -150,7 +150,7 @@ export async function createWalkIn(
     throw new Error('DUPLICATE');
   }
 
-  // Verifica capienza slot
+  // Calcolo capienza attuale (i walk-in possono sempre superare la capienza massima dello slot)
   const partySize = 1 + (data.companions || 0);
   const usage = await client.query<{ used: string }>(
     `SELECT COALESCE(SUM(1 + companions), 0)::text AS used
@@ -159,9 +159,7 @@ export async function createWalkIn(
     [slot.id]
   );
   const used = Number(usage.rows[0]?.used ?? 0);
-  if (used + partySize > slot.capacity) {
-    throw new Error('SLOT_FULL');
-  }
+  const isOverCapacity = used + partySize > slot.capacity;
 
   const registrationCode = makeWalkInCode();
   const hasRealEmail = Boolean(data.email && data.email.trim().length > 0);
@@ -209,7 +207,7 @@ export async function createWalkIn(
   await client.query(
     `INSERT INTO registration_events (registration_id, event_type, metadata)
      VALUES ($1, 'registered', $2::jsonb)`,
-    [registrationId, JSON.stringify({ partySize, registration_mode: 'walk_in', method })]
+    [registrationId, JSON.stringify({ partySize, registration_mode: 'walk_in', method, overCapacity: isOverCapacity, slotOccupancy: used + partySize })]
   );
 
   // Inserisci in coda comunicazioni SOLO per email reale (conferma immediata)
