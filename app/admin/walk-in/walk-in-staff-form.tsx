@@ -113,85 +113,78 @@ export default function WalkInStaffForm() {
   }
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.2fr) minmax(0, 0.8fr)', gap: '28px', alignItems: 'start' }}>
-      {/* Colonna Sinistra: Form Inserimento Desk */}
-      <div style={{ background: 'white', border: '1px solid #ddd7ce', padding: '28px' }}>
-        <h2 style={{ fontSize: '20px', fontWeight: 600, color: 'var(--navy)', margin: '0 0 18px' }}>
-          Nuovo Ospite Walk-In
-        </h2>
+    <div className="admin-walkin-grid">
+      {/* Colonna: Form Inserimento Desk */}
+      <div className="admin-walkin-card">
+        <h2>Nuovo Ospite Walk-In</h2>
 
         {error && (
-          <div style={{ background: '#fdf2f0', border: '1px solid #eecbc6', color: 'var(--danger)', padding: '12px 14px', marginBottom: '18px', fontSize: '13px' }}>
+          <div
+            style={{
+              background: '#fdf2f0',
+              border: '1px solid #eecbc6',
+              color: 'var(--danger)',
+              padding: '12px 14px',
+              marginBottom: '18px',
+              fontSize: '13px',
+            }}
+          >
             {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#695e52', marginBottom: '6px' }}>
-                Nome *
-              </label>
+          <div className="staff-form-row-2">
+            <div className="staff-field">
+              <label htmlFor="staff-firstName">Nome *</label>
               <input
+                id="staff-firstName"
                 type="text"
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
                 placeholder="Nome ospite"
                 required
-                style={{ width: '100%', padding: '12px', border: '1px solid #ccc', fontSize: '15px' }}
                 disabled={loading}
               />
             </div>
 
-            <div>
-              <label style={{ display: 'block', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#695e52', marginBottom: '6px' }}>
-                Cognome *
-              </label>
+            <div className="staff-field">
+              <label htmlFor="staff-lastName">Cognome *</label>
               <input
+                id="staff-lastName"
                 type="text"
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
                 placeholder="Cognome ospite"
                 required
-                style={{ width: '100%', padding: '12px', border: '1px solid #ccc', fontSize: '15px' }}
                 disabled={loading}
               />
             </div>
           </div>
 
-          <div>
-            <label style={{ display: 'block', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#695e52', marginBottom: '6px' }}>
-              Cellulare *
-            </label>
+          <div className="staff-field">
+            <label htmlFor="staff-phone">Cellulare *</label>
             <input
+              id="staff-phone"
               type="tel"
+              inputMode="tel"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="Numero di telefono"
               required
-              style={{ width: '100%', padding: '12px', border: '1px solid #ccc', fontSize: '15px' }}
               disabled={loading}
             />
           </div>
 
-          <div>
-            <label style={{ display: 'block', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#695e52', marginBottom: '6px' }}>
-              Tipo Evento *
-            </label>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+          <div className="staff-field">
+            <label>Tipo Evento *</label>
+            <div className="staff-pills">
               {EVENT_TYPES.map((type) => (
                 <button
                   key={type}
                   type="button"
                   onClick={() => setEventType(type)}
-                  style={{
-                    padding: '8px 12px',
-                    fontSize: '13px',
-                    border: '1px solid #0a3157',
-                    background: eventType === type ? '#0a3157' : 'white',
-                    color: eventType === type ? 'white' : '#0a3157',
-                    cursor: 'pointer',
-                  }}
+                  className={`staff-pill-btn ${eventType === type ? 'active' : ''}`}
                   disabled={loading}
                 >
                   {type}
@@ -200,168 +193,106 @@ export default function WalkInStaffForm() {
             </div>
           </div>
 
-          <div>
-            <label style={{ display: 'block', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#695e52', marginBottom: '6px' }}>
-              Accompagnatori (oltre al titolare)
-            </label>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '6px' }}>
+          <div className="staff-field">
+            <label>Accompagnatori (oltre al titolare)</label>
+            <div className="staff-companions">
               {COMPANION_OPTIONS.map((num) => (
                 <button
                   key={num}
                   type="button"
                   onClick={() => setCompanions(num)}
-                  style={{
-                    height: '40px',
-                    fontSize: '15px',
-                    fontWeight: 600,
-                    border: '1px solid #0a3157',
-                    background: companions === num ? '#0a3157' : 'white',
-                    color: companions === num ? '#efc64c' : '#0a3157',
-                    cursor: 'pointer',
-                  }}
+                  className={`staff-companion-btn ${companions === num ? 'active' : ''}`}
                   disabled={loading}
                 >
                   {num === 5 ? '5+' : num}
                 </button>
               ))}
             </div>
-            <span style={{ fontSize: '12px', color: '#746d64', marginTop: '4px', display: 'block' }}>
-              Totale persone nel gruppo: <strong>{1 + companions}</strong>
+            <span style={{ fontSize: '12px', color: '#746d64', marginTop: '2px', display: 'block' }}>
+              Totale gruppo: <strong>{1 + companions}</strong> {1 + companions === 1 ? 'persona' : 'persone'}
             </span>
           </div>
 
-          <div>
-            <label style={{ display: 'block', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#695e52', marginBottom: '6px' }}>
-              Email (Opzionale)
-            </label>
+          <div className="staff-field">
+            <label htmlFor="staff-email">Email (Opzionale)</label>
             <input
+              id="staff-email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="Lascia vuoto se l'ospite non la fornisce"
-              style={{ width: '100%', padding: '12px', border: '1px solid #ccc', fontSize: '14px' }}
+              placeholder="Lascia vuoto se non fornita"
               disabled={loading}
             />
           </div>
 
-          <div>
-            <label style={{ display: 'block', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#695e52', marginBottom: '6px' }}>
-              Note desk (Opzionali)
-            </label>
+          <div className="staff-field">
+            <label htmlFor="staff-notes">Note desk (Opzionali)</label>
             <input
+              id="staff-notes"
               type="text"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Es. arrivati con coppia di amici"
-              style={{ width: '100%', padding: '12px', border: '1px solid #ccc', fontSize: '14px' }}
               disabled={loading}
             />
           </div>
 
           {/* Toggle check-in immediato */}
-          <div style={{ background: '#f8f5ee', border: '1px solid #dfd5c4', padding: '14px', marginTop: '4px' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', fontWeight: 600, color: 'var(--navy)', cursor: 'pointer' }}>
+          <div className="staff-toggle-box">
+            <label className="staff-toggle-label">
               <input
                 type="checkbox"
                 checked={immediateCheckin}
                 onChange={(e) => setImmediateCheckin(e.target.checked)}
-                style={{ width: '18px', height: '18px', accentColor: 'var(--navy)' }}
                 disabled={loading}
               />
-              <span>Conferma ingresso immediatamente (Check-in IN)</span>
+              <span>Conferma ingresso subito (Check-in IN)</span>
             </label>
-            <p style={{ margin: '6px 0 0 28px', fontSize: '12px', color: '#695e52' }}>
+            <p style={{ margin: '6px 0 0 34px', fontSize: '12px', color: '#695e52', lineHeight: 1.4 }}>
               Se attivo, l&apos;ospite viene registrato direttamente come &ldquo;Presente&rdquo; e sarai reindirizzato alla schermata check-in.
             </p>
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            style={{
-              background: '#0a3157',
-              color: '#efc64c',
-              border: 'none',
-              padding: '16px',
-              fontSize: '14px',
-              textTransform: 'uppercase',
-              letterSpacing: '0.12em',
-              fontWeight: 700,
-              cursor: 'pointer',
-              marginTop: '6px',
-            }}
-          >
+          <button type="submit" disabled={loading} className="staff-submit-btn">
             {loading ? 'Registrazione in corso...' : 'Registra Ospite al Desk'}
           </button>
         </form>
       </div>
 
-      {/* Colonna Destra: Ricerca Rapida e Recupero Pass */}
+      {/* Colonna: Ricerca Rapida e Supporto */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-        <div style={{ background: 'white', border: '1px solid #ddd7ce', padding: '24px' }}>
-          <h2 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--navy)', margin: '0 0 12px' }}>
-            🔍 Cerca Ospite / Recupero Pass
-          </h2>
-          <p style={{ fontSize: '13px', color: '#695e52', margin: '0 0 14px' }}>
+        <div className="admin-walkin-card">
+          <h2>🔍 Cerca Ospite / Recupero Pass</h2>
+          <p style={{ fontSize: '13px', color: '#695e52', margin: '0 0 14px', lineHeight: 1.45 }}>
             Cerca per telefono, cognome o codice per aprire subito la scheda check-in o uscita.
           </p>
 
-          <form onSubmit={handleSearch} style={{ display: 'flex', gap: '8px' }}>
+          <form onSubmit={handleSearch} className="staff-search-box">
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Telefono, nome o codice..."
-              style={{ flex: 1, padding: '10px 12px', border: '1px solid #ccc', fontSize: '14px' }}
             />
-            <button
-              type="submit"
-              disabled={searchLoading}
-              style={{
-                background: '#a87423',
-                color: 'white',
-                border: 'none',
-                padding: '10px 16px',
-                fontSize: '13px',
-                cursor: 'pointer',
-                fontWeight: 600,
-              }}
-            >
+            <button type="submit" disabled={searchLoading} className="staff-search-btn">
               {searchLoading ? '...' : 'Cerca'}
             </button>
           </form>
 
           {searchResults.length > 0 && (
-            <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ marginTop: '16px' }}>
               {searchResults.map((item) => (
-                <div
-                  key={item.id}
-                  style={{
-                    border: '1px solid #e2ddd5',
-                    padding: '10px 12px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    fontSize: '13px',
-                  }}
-                >
+                <div key={item.id} className="staff-search-result-item">
                   <div>
                     <strong>{item.name}</strong> ({item.phone})
-                    <div style={{ fontSize: '11px', color: '#746d64' }}>
+                    <div style={{ fontSize: '11px', color: '#746d64', marginTop: '2px' }}>
                       Cod: {item.registrationCode} · Stato: <span style={{ fontWeight: 600 }}>{item.status}</span>
                     </div>
                   </div>
                   <button
                     type="button"
                     onClick={() => router.push(`/admin/checkin/${item.token}`)}
-                    style={{
-                      background: '#0a3157',
-                      color: 'white',
-                      border: 'none',
-                      padding: '6px 10px',
-                      fontSize: '12px',
-                      cursor: 'pointer',
-                    }}
+                    className="staff-open-sheet-btn"
                   >
                     Apri Scheda →
                   </button>
@@ -371,12 +302,32 @@ export default function WalkInStaffForm() {
           )}
         </div>
 
-        <div style={{ background: '#f5f3ef', border: '1px solid #ddd7ce', padding: '20px', fontSize: '13px', color: '#55483c', lineHeight: 1.5 }}>
+        <div
+          style={{
+            background: '#f8f5ee',
+            border: '1px solid #ddd7ce',
+            padding: '16px 18px',
+            fontSize: '13px',
+            color: '#55483c',
+            lineHeight: 1.5,
+            borderRadius: '4px',
+          }}
+        >
           <strong style={{ display: 'block', color: 'var(--navy)', marginBottom: '6px' }}>
             💡 Suggerimento per l’accoglienza
           </strong>
           Se l’ospite preferisce registrarsi da solo dal proprio smartphone, mostragli il QR cartaceo del desk che punta a:
-          <div style={{ background: 'white', padding: '8px', border: '1px solid #ddd', marginTop: '6px', fontFamily: 'monospace', fontSize: '12px', wordBreak: 'break-all' }}>
+          <div
+            style={{
+              background: 'white',
+              padding: '10px',
+              border: '1px solid #ddd',
+              marginTop: '6px',
+              fontFamily: 'monospace',
+              fontSize: '12px',
+              wordBreak: 'break-all',
+            }}
+          >
             https://www.damaigarden.it/open-days/walk-in
           </div>
         </div>
