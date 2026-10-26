@@ -17,6 +17,11 @@ type Stats = {
   exited: string;
   cancelled: string;
   hot: string;
+  walk_in_total: string;
+  walk_in_present: string;
+  walk_in_exited: string;
+  cadeau_delivered: string;
+  walk_in_contacts: string;
 };
 
 type Row = {
@@ -36,18 +41,25 @@ type Row = {
 
 const quickLinks = [
   {
-    href: '/admin/registrations',
-    eyebrow: 'Gestione ospiti',
-    title: 'Registrazioni',
-    text: 'Cerca, modifica, annulla o archivia i test.',
-    tone: 'navy',
+    href: '/admin/walk-in',
+    eyebrow: 'Desk accoglienza',
+    title: 'Registra Walk-In',
+    text: 'Accoglienza ospiti non prenotati e ricerca.',
+    tone: 'gold',
   },
   {
     href: '/admin/checkin',
     eyebrow: 'Accoglienza',
     title: 'Scanner QR',
     text: 'Ingresso, uscita e consegna cadeau.',
-    tone: 'gold',
+    tone: 'navy',
+  },
+  {
+    href: '/admin/registrations',
+    eyebrow: 'Gestione ospiti',
+    title: 'Registrazioni',
+    text: 'Cerca, modifica, annulla o archivia i test.',
+    tone: 'cream',
   },
   {
     href: '/admin/slots',
@@ -94,7 +106,16 @@ export default async function AdminPage() {
       COUNT(*) FILTER (WHERE status = 'checked_in')::text AS checked_in,
       COUNT(*) FILTER (WHERE status = 'exited')::text AS exited,
       COUNT(*) FILTER (WHERE status = 'cancelled')::text AS cancelled,
-      COUNT(*) FILTER (WHERE lead_stage = 'hot' AND status <> 'cancelled')::text AS hot
+      COUNT(*) FILTER (WHERE lead_stage = 'hot' AND status <> 'cancelled')::text AS hot,
+      COUNT(*) FILTER (WHERE registration_mode = 'walk_in' AND status <> 'cancelled')::text AS walk_in_total,
+      COUNT(*) FILTER (WHERE registration_mode = 'walk_in' AND status = 'checked_in')::text AS walk_in_present,
+      COUNT(*) FILTER (WHERE registration_mode = 'walk_in' AND status = 'exited')::text AS walk_in_exited,
+      COUNT(*) FILTER (WHERE cadeau_delivered_at IS NOT NULL)::text AS cadeau_delivered,
+      COUNT(*) FILTER (
+        WHERE registration_mode = 'walk_in'
+          AND status <> 'cancelled'
+          AND email NOT LIKE '%@no-email.damai.local'
+      )::text AS walk_in_contacts
     FROM registrations
   `);
 
@@ -115,6 +136,11 @@ export default async function AdminPage() {
     exited: '0',
     cancelled: '0',
     hot: '0',
+    walk_in_total: '0',
+    walk_in_present: '0',
+    walk_in_exited: '0',
+    cadeau_delivered: '0',
+    walk_in_contacts: '0',
   };
 
   return (
@@ -134,10 +160,15 @@ export default async function AdminPage() {
         </header>
 
         <section className="stats admin-stats" aria-label="Riepilogo registrazioni">
-          <div className="stat"><b>{s.active}</b><span>Registrazioni attive</span></div>
+          <div className="stat"><b>{s.active}</b><span>Registrazioni totali</span></div>
           <div className="stat"><b>{s.people}</b><span>Persone attese</span></div>
           <div className="stat"><b>{s.checked_in}</b><span>Presenti ora</span></div>
           <div className="stat"><b>{s.exited}</b><span>Usciti</span></div>
+          <div className="stat"><b>{s.cadeau_delivered}</b><span>Cadeau consegnati</span></div>
+          <div className="stat" style={{ borderLeft: '3px solid var(--gold)' }}>
+            <b style={{ color: 'var(--gold)' }}>{s.walk_in_total}</b>
+            <span>Walk-In ({s.walk_in_present} ora)</span>
+          </div>
           <div className="stat"><b>{s.hot}</b><span>Hot lead</span></div>
           <div className="stat muted-stat"><b>{s.cancelled}</b><span>Annullati / test</span></div>
         </section>

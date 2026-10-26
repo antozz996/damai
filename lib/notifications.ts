@@ -181,6 +181,9 @@ function renderEmailHtml(type: CommunicationType, guest: Guest, copy: ReturnType
 }
 
 export async function sendEmail(type: CommunicationType, guest: Guest, options: { idempotencyKey?: string } = {}) {
+  if (guest.email && guest.email.toLowerCase().endsWith('@no-email.damai.local')) {
+    return { sent: false, reason: 'placeholder_email' };
+  }
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.EMAIL_FROM;
   if (!apiKey || !from || !baseUrl()) return { sent:false, reason:'email_not_configured' };

@@ -1,0 +1,282 @@
+/* Pass Screen Styles */
+.pass-shell {
+  min-height: 100vh;
+  background: radial-gradient(circle at 50% 10%, #114270, #06233d 75%);
+  color: #fffaf1;
+  padding: 24px 16px 60px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  overflow-x: hidden;
+  font-family: Georgia, 'Times New Roman', serif;
+}
+
+.pass-container {
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.pass-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.pass-logo {
+  width: 160px;
+  height: auto;
+  margin: 0 auto 10px;
+  display: block;
+}
+
+.pass-edition {
+  font-size: 11px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--yellow);
+}
+
+.pass-title {
+  font-family: 'Brush Script MT', 'Segoe Script', cursive;
+  font-size: 34px;
+  font-weight: 400;
+  color: #ffffff;
+  margin: 2px 0 0;
+  transform: rotate(-2deg);
+}
+
+/* Banner Screenshot - Massima Visibilità */
+.screenshot-banner {
+  width: 100%;
+  background: #efc64c;
+  color: #062541;
+  border: 3px solid #b4862f;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+  padding: 18px 16px;
+  text-align: center;
+  margin-bottom: 22px;
+  animation: pulse-border 3s ease-in-out infinite;
+}
+
+@keyframes pulse-border {
+  0%, 100% { border-color: #b4862f; }
+  50% { border-color: #ffffff; }
+}
+
+.screenshot-icon {
+  font-size: 32px;
+  line-height: 1;
+  margin-bottom: 6px;
+}
+
+.screenshot-banner strong {
+  display: block;
+  font-size: 15px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 800;
+  color: #062541;
+  margin-bottom: 6px;
+}
+
+.screenshot-banner p {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: #261e12;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-weight: 500;
+}
+
+/* Card Pass Ospite */
+.pass-card {
+  width: 100%;
+  background: #ffffff;
+  color: #0a3157;
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(239, 198, 76, 0.8);
+  padding: 26px 20px 22px;
+  text-align: center;
+  position: relative;
+}
+
+.pass-card-eyebrow {
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #a87423;
+  margin-bottom: 6px;
+}
+
+.pass-guest-name {
+  font-size: 26px;
+  font-weight: 600;
+  color: #0a3157;
+  margin: 0 0 12px;
+  line-height: 1.15;
+}
+
+.pass-tags {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.pass-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.pass-badge.walkin {
+  background: #0a3157;
+  color: #efc64c;
+}
+
+.pass-badge.party {
+  background: #f4eee2;
+  color: #55483c;
+  border: 1px solid #dfd5c4;
+}
+
+/* QR Code */
+.pass-qr-wrap {
+  width: 250px;
+  height: 250px;
+  max-width: 80vw;
+  max-height: 80vw;
+  margin: 0 auto 16px;
+  background: white;
+  padding: 8px;
+  border: 2px dashed #0a3157;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pass-qr-img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+}
+
+.pass-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 15px;
+  letter-spacing: 0.12em;
+  color: #0a3157;
+  background: #f7f3ec;
+  padding: 6px 14px;
+  display: inline-block;
+  margin-bottom: 14px;
+  border: 1px solid #e5dac9;
+}
+
+.pass-date-time {
+  font-size: 13px;
+  color: #695e52;
+  margin: 0;
+}
+
+/* Azioni e Conferma Screenshot */
+.pass-actions {
+  width: 100%;
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.btn-confirm-screenshot {
+  width: 100%;
+  background: #315d46;
+  color: white;
+  border: none;
+  padding: 16px;
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(49, 93, 70, 0.3);
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-confirm-screenshot:hover {
+  background: #254936;
+}
+
+.btn-confirm-screenshot.saved {
+  background: #1e3f2d;
+  cursor: default;
+}
+
+.screenshot-saved-msg {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #efc64c;
+  padding: 12px 14px;
+  text-align: center;
+  font-size: 13px;
+  line-height: 1.4;
+  margin-top: 6px;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.pass-download-link {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 12px;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-align: center;
+  letter-spacing: 0.08em;
+  padding: 6px;
+}
+
+.pass-download-link:hover {
+  color: #efc64c;
+}
+
+/* Informazioni di uscita e cadeau */
+.pass-instructions {
+  width: 100%;
+  margin-top: 26px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 13px;
+  line-height: 1.55;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  padding-top: 20px;
+}
+
+.pass-instructions strong {
+  color: #efc64c;
+  display: block;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.pass-support-note {
+  margin-top: 14px;
+  font-size: 11.5px;
+  color: rgba(255, 255, 255, 0.6);
+  line-height: 1.45;
+}

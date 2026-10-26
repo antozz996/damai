@@ -1,0 +1,309 @@
+/* Walk-In DAMAI Mobile-First Styling */
+.walkin-shell {
+  min-height: 100vh;
+  background: var(--navy-deep);
+  color: var(--ivory);
+  padding: 24px 16px 64px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  overflow-x: hidden;
+}
+
+.walkin-shell::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.05;
+  background-image: linear-gradient(45deg, #fff 1px, transparent 1px), linear-gradient(-45deg, #fff 1px, transparent 1px);
+  background-size: 30px 30px;
+  pointer-events: none;
+}
+
+.walkin-container {
+  width: 100%;
+  max-width: 540px;
+  position: relative;
+  z-index: 2;
+}
+
+.walkin-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.walkin-logo {
+  width: 170px;
+  height: auto;
+  margin: 0 auto 14px;
+  display: block;
+}
+
+.walkin-tag {
+  display: inline-block;
+  font-size: 10px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--yellow);
+  margin-bottom: 6px;
+}
+
+.walkin-title {
+  font-size: clamp(32px, 8vw, 42px);
+  font-weight: 400;
+  line-height: 1.05;
+  color: white;
+  margin: 0 0 8px;
+}
+
+.walkin-title em {
+  display: block;
+  font-family: 'Brush Script MT', 'Segoe Script', cursive;
+  font-weight: 400;
+  color: var(--yellow);
+  font-size: 1.1em;
+  letter-spacing: 0;
+  transform: rotate(-3deg);
+  margin-top: 4px;
+}
+
+.walkin-subtitle {
+  font-size: 15px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.78);
+  margin: 8px 0 0;
+}
+
+.walkin-card {
+  background: var(--ivory);
+  color: var(--ink);
+  border: 1px solid rgba(239, 198, 76, 0.85);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  padding: 28px 20px;
+}
+
+@media (min-width: 480px) {
+  .walkin-card {
+    padding: 36px 32px;
+  }
+}
+
+.walkin-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.walkin-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.walkin-field label {
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--navy);
+}
+
+.walkin-field input,
+.walkin-field textarea,
+.walkin-field select {
+  width: 100%;
+  border: 1px solid rgba(10, 49, 87, 0.22);
+  background: #ffffff;
+  padding: 15px 14px;
+  font-size: 16px; /* evita zoom su iOS */
+  color: var(--ink);
+  outline: none;
+  border-radius: 0;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.walkin-field input:focus,
+.walkin-field textarea:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(168, 116, 35, 0.15);
+}
+
+.walkin-field-hint {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.35;
+}
+
+/* Selector a pulsanti rapidi (Pills) */
+.pill-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pill-btn {
+  flex: 1 1 calc(50% - 4px);
+  background: white;
+  border: 1px solid rgba(10, 49, 87, 0.2);
+  color: var(--navy);
+  padding: 13px 10px;
+  font-size: 14px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.pill-btn:hover {
+  border-color: var(--gold);
+}
+
+.pill-btn.active {
+  background: var(--navy);
+  color: white;
+  border-color: var(--navy);
+  box-shadow: inset 0 -3px var(--yellow);
+}
+
+/* Accompagnatori Tap Buttons */
+.companion-selector {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 6px;
+}
+
+.companion-btn {
+  background: white;
+  border: 1px solid rgba(10, 49, 87, 0.2);
+  color: var(--navy);
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.companion-btn:hover {
+  border-color: var(--gold);
+}
+
+.companion-btn.active {
+  background: var(--navy);
+  color: white;
+  border-color: var(--navy);
+  box-shadow: inset 0 -3px var(--yellow);
+}
+
+/* Accordion Dettagli Facoltativi */
+.walkin-details {
+  border: 1px dashed rgba(10, 49, 87, 0.25);
+  background: rgba(255, 255, 255, 0.6);
+  padding: 14px 16px;
+  margin-top: 4px;
+}
+
+.walkin-details summary {
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--navy);
+  letter-spacing: 0.05em;
+  user-select: none;
+  outline: none;
+}
+
+.walkin-details summary::-webkit-details-marker {
+  color: var(--gold);
+}
+
+.walkin-details-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-top: 16px;
+  margin-top: 12px;
+  border-top: 1px solid rgba(10, 49, 87, 0.1);
+}
+
+/* Consensi */
+.walkin-consents {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 6px;
+}
+
+.walkin-consent-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #4f4337;
+}
+
+.walkin-consent-item input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  accent-color: var(--navy);
+  cursor: pointer;
+}
+
+.walkin-consent-item a {
+  color: var(--gold);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Bottone Submit */
+.walkin-submit-btn {
+  width: 100%;
+  background: var(--gold);
+  color: white;
+  border: none;
+  padding: 18px 20px;
+  font-size: 14px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 10px 25px rgba(168, 116, 35, 0.25);
+  transition: background 0.2s, transform 0.1s;
+  margin-top: 6px;
+}
+
+.walkin-submit-btn:hover:not(:disabled) {
+  background: #8e5e1a;
+}
+
+.walkin-submit-btn:active:not(:disabled) {
+  transform: scale(0.99);
+}
+
+.walkin-submit-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+/* Box Messaggio Errore */
+.walkin-error-box {
+  background: #fdf2f0;
+  border: 1px solid #eecbc6;
+  color: var(--danger);
+  padding: 14px 16px;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.walkin-footer {
+  text-align: center;
+  margin-top: 24px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.55);
+  letter-spacing: 0.05em;
+}

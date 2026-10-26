@@ -10,14 +10,22 @@ function csvCell(value: unknown) {
 export async function GET() {
   const result = await query<Record<string, unknown>>(`
     SELECT r.registration_code AS codice, r.first_name AS nome, r.last_name AS cognome,
-      r.phone AS telefono, r.email, r.event_type AS tipo_evento,
+      r.phone AS telefono,
+      CASE WHEN r.email LIKE '%@no-email.damai.local' THEN '' ELSE r.email END AS email,
+      COALESCE(r.registration_mode, 'online') AS modalita_registrazione,
+      COALESCE(r.registration_method, 'self') AS metodo_registrazione,
+      r.event_type AS tipo_evento,
       r.planned_event_date::text AS data_evento, r.guest_count AS ospiti_evento,
       r.companions AS accompagnatori_open_day, s.event_date::text AS giorno_open_day,
       to_char(s.start_time,'HH24:MI') AS fascia_oraria, r.source AS provenienza,
       r.status AS stato_ingresso, r.lead_stage AS stato_lead,
       r.marketing_consent AS consenso_marketing,
       r.utm_source, r.utm_medium, r.utm_campaign,
-      r.checked_in_at::text AS checkin_at, r.created_at::text AS registrato_at
+      r.arrived_at::text AS arrivo_walkin_at,
+      r.checked_in_at::text AS checkin_at,
+      r.checked_out_at::text AS checkout_at,
+      r.cadeau_delivered_at::text AS cadeau_consegnato_at,
+      r.created_at::text AS registrato_at
     FROM registrations r
     JOIN open_day_slots s ON s.id=r.slot_id
     ORDER BY s.event_date, s.start_time, r.created_at

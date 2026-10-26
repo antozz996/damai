@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 type Row = {
   id:string; registration_code:string; first_name:string; last_name:string; phone:string; email:string;
   event_type:string; guest_count:number|null; companions:number; status:string; checked_in_at:string|null; checked_out_at:string|null; cadeau_delivered_at:string|null;
-  event_date:string; start_time:string;
+  registration_mode?:string; event_date:string; start_time:string;
 };
 
 export default async function CheckinPage({ params, searchParams }: { params: Promise<{ token:string }>; searchParams: Promise<{ ok?:string }> }) {
@@ -15,26 +15,35 @@ export default async function CheckinPage({ params, searchParams }: { params: Pr
   const result = await query<Row>(`
     SELECT r.id::text, r.registration_code, r.first_name, r.last_name, r.phone, r.email,
       r.event_type, r.guest_count, r.companions, r.status, r.checked_in_at::text, r.checked_out_at::text, r.cadeau_delivered_at::text,
-      s.event_date::text, s.start_time::text
+      r.registration_mode, s.event_date::text, s.start_time::text
     FROM registrations r JOIN open_day_slots s ON s.id=r.slot_id
     WHERE r.qr_token=$1::uuid LIMIT 1
   `,[token]);
   if (!result.rowCount) notFound();
   const r = result.rows[0];
+  const isWalkIn = r.registration_mode === 'walk_in';
+  const hasRealEmail = r.email && !r.email.toLowerCase().endsWith('@no-email.damai.local');
 
   return (
     <main className="admin">
       <div className="checkin-card">
-        <div className="eyebrow">DAMAI · Check-in</div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div className="eyebrow">DAMAI · Check-in</div>
+          {isWalkIn && (
+            <span style={{ background: '#0a3157', color: '#efc64c', fontSize: '11px', padding: '3px 8px', letterSpacing: '0.1em', fontWeight: 'bold' }}>
+              ✦ WALK-IN
+            </span>
+          )}
+        </div>
         <h1>{r.first_name} {r.last_name}</h1>
         {ok === 'entry' && <div className="success">Ingresso registrato correttamente.</div>}
         {ok === 'exit' && <div className="success">Uscita registrata. Ora puoi consegnare il cadeau.</div>}
         {ok === 'gift' && <div className="success">Cadeau registrato come consegnato.</div>}
         <p><strong>Codice:</strong> {r.registration_code}</p>
         <p><strong>Evento:</strong> {r.event_type}{r.guest_count ? ` · circa ${r.guest_count} ospiti` : ''}</p>
-        <p><strong>Ingresso prenotato:</strong> {r.event_date} · {r.start_time.slice(0,5)}</p>
+        <p><strong>Ingresso:</strong> {r.event_date} · {r.start_time.slice(0,5)} {isWalkIn ? '(Walk-in)' : ''}</p>
         <p><strong>Persone nel gruppo:</strong> {1+r.companions}</p>
-        <p><strong>Telefono:</strong> {r.phone}<br/><strong>Email:</strong> {r.email}</p>
+        <p><strong>Telefono:</strong> {r.phone}<br/><strong>Email:</strong> {hasRealEmail ? r.email : <span style={{ color: '#888' }}>(Nessuna email - Walk-In)</span>}</p>
         <p><strong>Stato:</strong> <span className={`pill ${r.status==='checked_in' || r.status==='exited'?'ok':''}`}>{r.status === 'checked_in' ? 'PRESENTE' : r.status === 'exited' ? 'USCITO' : r.status}</span></p>
         {r.checked_in_at && <p className="info">Ingresso: {new Date(r.checked_in_at).toLocaleString('it-IT')}</p>}
         {r.checked_out_at && <p className="info">Uscita: {new Date(r.checked_out_at).toLocaleString('it-IT')}</p>}
