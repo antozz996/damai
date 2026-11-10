@@ -4,10 +4,16 @@
   "installCommand": "npm install",
   "buildCommand": "npm run build",
   "outputDirectory": null,
-  "crons": [
+  "headers": [
     {
-      "path": "/api/cron/communications",
-      "schedule": "0 8 * * *"
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Robots-Tag", "value": "noindex, nofollow" },
+        { "key": "X-Frame-Options", "value": "DENY" },
+        { "key": "Content-Security-Policy", "value": "frame-ancestors 'none'" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" }
+      ]
     }
   ]
 }
