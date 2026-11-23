@@ -129,9 +129,6 @@ export function proxy(request: NextRequest) {
     });
   }
 
-  // TEMPORANEO: endpoint di migrazione, si autentica da solo con MIGRATION_SECRET.
-  if (pathname === '/api/maintenance/migrate') return NextResponse.next();
-
   if (isAdminPath(pathname)) return requireAdmin(request);
   if (isPrivacyPath(pathname)) return NextResponse.next();
 
