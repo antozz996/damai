@@ -5,9 +5,9 @@ import './walk-in.css';
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-  title: 'Registrazione Immediata · DAMAI Open Days 2026',
+  title: 'Registrazione immediata · Damai Christmas Village',
   description:
-    'Benvenuto a DAMAI Event Garden. Registrati in pochi secondi per ottenere il tuo pass personale per La Dolce Vita Open Days.',
+    'Benvenuto a DAMAI Event Garden. Registrati in pochi secondi per ottenere il tuo pass personale per il Damai Christmas Village.',
 };
 
 export default function WalkInPublicPage() {
@@ -25,8 +25,8 @@ export default function WalkInPublicPage() {
           />
           <span className="walkin-tag">✦ Registrazione Accoglienza ✦</span>
           <h1 className="walkin-title">
-            Benvenuto a
-            <em>La Dolce Vita</em>
+            Benvenuto al
+            <em>Christmas Village</em>
           </h1>
           <p className="walkin-subtitle">
             Compila il modulo rapido per ottenere subito il tuo pass personale d’ingresso.
@@ -38,7 +38,7 @@ export default function WalkInPublicPage() {
         </section>
 
         <footer className="walkin-footer">
-          DAMAI Event Garden · Via Marina di Varcaturo · Open Days 2026
+          DAMAI Event Garden · Via Marina di Varcaturo 42, Castel Volturno (CE) · Christmas Village 2026
         </footer>
       </div>
     </main>

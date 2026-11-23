@@ -1,25 +1,23 @@
 import { NextRequest } from 'next/server';
 import QRCode from 'qrcode';
 import { query } from '@/lib/db';
+import { EVENT, checkinUrl as buildCheckinUrl } from '@/lib/event';
 
 export const dynamic = 'force-dynamic';
-
-function staffBaseUrl() {
-  return (process.env.STAFF_BASE_URL || 'https://damai-rouge.vercel.app').replace(/\/$/, '');
-}
 
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ token: string }> }
 ) {
   const { token } = await params;
+  if (!/^[0-9a-f-]{36}$/i.test(token)) return new Response('Pass non trovato', { status: 404 });
 
   const res = await query<{ registration_code: string }>(
     `SELECT registration_code
      FROM registrations
-     WHERE qr_token = $1::uuid
+     WHERE qr_token = $1::uuid AND edition = $2
      LIMIT 1`,
-    [token]
+    [token, EVENT.edition]
   );
 
   if (!res.rowCount || !res.rows[0]) {
@@ -27,7 +25,7 @@ export async function GET(
   }
 
   const code = res.rows[0].registration_code;
-  const checkinUrl = `${staffBaseUrl()}/admin/checkin/${token}`;
+  const checkinUrl = buildCheckinUrl(token);
 
   const pngBuffer = await QRCode.toBuffer(checkinUrl, {
     width: 520,

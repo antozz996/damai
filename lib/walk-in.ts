@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { randomBytes } from 'crypto';
 import { PoolClient } from 'pg';
 import { Guest } from '@/lib/notifications';
+import { EVENT } from '@/lib/event';
 
 export type SlotRow = {
   id: string;
@@ -28,8 +29,15 @@ export const walkInSchema = z.object({
   firstName: z.string().trim().min(2, 'Inserisci il nome (almeno 2 caratteri)').max(80),
   lastName: z.string().trim().min(2, 'Inserisci il cognome (almeno 2 caratteri)').max(80),
   phone: z.string().trim().min(7, 'Inserisci un recapito telefonico valido').max(30),
-  eventType: z.string().trim().min(2, 'Seleziona la tipologia di evento').max(80),
+  // Facoltativo: chi viene solo per il Christmas Village non indica un evento.
+  eventType: z.preprocess(
+    (value) => (value === null || value === '' ? undefined : value),
+    z.string().trim().min(2).max(80).default(EVENT.defaultEventType)
+  ),
+  // Accompagnatori totali, bambini inclusi.
   companions: z.coerce.number().int().min(0).max(10).default(0),
+  // Solo informativo: quanti accompagnatori sono bambini.
+  children: z.coerce.number().int().min(0).max(10).default(0),
   email: z.string().trim().email('Indirizzo email non valido').max(160).optional().or(z.literal('')),
   plannedEventDate: z.string().trim().optional().or(z.literal('')),
   guestCount: z.coerce.number().int().min(1).max(1000).optional(),
@@ -50,11 +58,12 @@ export async function findCurrentSlot(client: PoolClient): Promise<SlotRow | nul
     SELECT id, event_date::text, start_time::text, capacity
     FROM open_day_slots
     WHERE is_active = true
+      AND edition = $1
       AND event_date = (CURRENT_TIMESTAMP AT TIME ZONE 'Europe/Rome')::date
       AND start_time <= (CURRENT_TIMESTAMP AT TIME ZONE 'Europe/Rome')::time + interval '30 minutes'
     ORDER BY start_time DESC
     LIMIT 1
-  `);
+  `, [EVENT.edition]);
 
   if (currentRes.rowCount && currentRes.rows[0]) {
     return currentRes.rows[0];
@@ -65,10 +74,11 @@ export async function findCurrentSlot(client: PoolClient): Promise<SlotRow | nul
     SELECT id, event_date::text, start_time::text, capacity
     FROM open_day_slots
     WHERE is_active = true
+      AND edition = $1
       AND event_date = (CURRENT_TIMESTAMP AT TIME ZONE 'Europe/Rome')::date
     ORDER BY start_time ASC
     LIMIT 1
-  `);
+  `, [EVENT.edition]);
 
   if (firstSlotToday.rowCount && firstSlotToday.rows[0]) {
     return firstSlotToday.rows[0];
@@ -80,12 +90,13 @@ export async function findCurrentSlot(client: PoolClient): Promise<SlotRow | nul
     SELECT id, event_date::text, start_time::text, capacity
     FROM open_day_slots
     WHERE is_active = true
+      AND edition = $1
     ORDER BY
       CASE WHEN event_date >= (CURRENT_TIMESTAMP AT TIME ZONE 'Europe/Rome')::date THEN 0 ELSE 1 END,
       event_date ASC,
       start_time ASC
     LIMIT 1
-  `);
+  `, [EVENT.edition]);
 
   return fallbackSlot.rows[0] || null;
 }
@@ -111,9 +122,9 @@ export async function createWalkIn(
     const slotRes = await client.query<SlotRow>(
       `SELECT id, event_date::text, start_time::text, capacity
        FROM open_day_slots
-       WHERE id = $1 AND is_active = true
+       WHERE id = $1 AND edition = $2 AND is_active = true
        FOR UPDATE`,
-      [overrideSlotId]
+      [overrideSlotId, EVENT.edition]
     );
     if (!slotRes.rowCount || !slotRes.rows[0]) {
       throw new Error('NO_ACTIVE_SLOT');
@@ -128,9 +139,9 @@ export async function createWalkIn(
     const lockedRes = await client.query<SlotRow>(
       `SELECT id, event_date::text, start_time::text, capacity
        FROM open_day_slots
-       WHERE id = $1 AND is_active = true
+       WHERE id = $1 AND edition = $2 AND is_active = true
        FOR UPDATE`,
-      [candidate.id]
+      [candidate.id, EVENT.edition]
     );
     if (!lockedRes.rowCount || !lockedRes.rows[0]) {
       throw new Error('NO_ACTIVE_SLOT');
@@ -141,10 +152,10 @@ export async function createWalkIn(
   // Controllo duplicato telefono tra le registrazioni non cancellate
   const duplicate = await client.query(
     `SELECT 1 FROM registrations
-     WHERE status <> 'cancelled' AND phone = $1
+     WHERE edition = $2 AND status <> 'cancelled' AND phone = $1
      LIMIT 1
      FOR UPDATE`,
-    [data.phone]
+    [data.phone, EVENT.edition]
   );
   if (duplicate.rowCount && duplicate.rowCount > 0) {
     throw new Error('DUPLICATE');
@@ -152,6 +163,8 @@ export async function createWalkIn(
 
   // Calcolo capienza attuale (i walk-in possono sempre superare la capienza massima dello slot)
   const partySize = 1 + (data.companions || 0);
+  // I bambini sono compresi negli accompagnatori: non possono superarli.
+  const children = Math.min(data.children || 0, data.companions || 0);
   const usage = await client.query<{ used: string }>(
     `SELECT COALESCE(SUM(1 + companions), 0)::text AS used
      FROM registrations
@@ -170,12 +183,12 @@ export async function createWalkIn(
        registration_code, first_name, last_name, phone, email, event_type,
        planned_event_date, guest_count, companions, slot_id, source, notes,
        privacy_consent, marketing_consent, registration_mode, registration_method,
-       arrived_at, utm_source, utm_medium, utm_campaign
+       arrived_at, utm_source, utm_medium, utm_campaign, edition, children
      ) VALUES (
        $1, $2, $3, $4, $5, $6,
        NULLIF($7, '')::date, $8, $9, $10, $11, $12,
        $13, $14, 'walk_in', $15,
-       now(), $16, $17, $18
+       now(), $16, $17, $18, $19, $20
      )
      RETURNING id, qr_token::text`,
     [
@@ -197,6 +210,8 @@ export async function createWalkIn(
       data.utmSource || null,
       data.utmMedium || null,
       data.utmCampaign || null,
+      EVENT.edition,
+      children,
     ]
   );
 
@@ -207,7 +222,7 @@ export async function createWalkIn(
   await client.query(
     `INSERT INTO registration_events (registration_id, event_type, metadata)
      VALUES ($1, 'registered', $2::jsonb)`,
-    [registrationId, JSON.stringify({ partySize, registration_mode: 'walk_in', method, overCapacity: isOverCapacity, slotOccupancy: used + partySize })]
+    [registrationId, JSON.stringify({ partySize, children, registration_mode: 'walk_in', method, overCapacity: isOverCapacity, slotOccupancy: used + partySize })]
   );
 
   // Inserisci in coda comunicazioni SOLO per email reale (conferma immediata)

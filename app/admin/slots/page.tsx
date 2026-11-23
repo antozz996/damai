@@ -1,4 +1,5 @@
 import { query } from '@/lib/db';
+import { EVENT } from '@/lib/event';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,12 +10,13 @@ export default async function SlotAdminPage() {
     SELECT s.id::text, s.event_date::text, s.start_time::text, s.capacity, s.is_active,
       COALESCE(SUM(CASE WHEN r.status IN ('registered','checked_in') THEN (1+r.companions) ELSE 0 END),0)::text AS used
     FROM open_day_slots s LEFT JOIN registrations r ON r.slot_id=s.id
+    WHERE s.edition=$1
     GROUP BY s.id ORDER BY s.event_date,s.start_time
-  `);
+  `, [EVENT.edition]);
   return (
     <main className="admin"><div className="admin-inner">
       <div className="eyebrow">DAMAI · Configurazione</div>
-      <h1>Fasce di ingresso</h1>
+      <h1>Fasce di ingresso · {EVENT.shortName}</h1>
       <div className="toolbar"><a href="/admin">← Dashboard</a><a href="/admin/slots/overview">Prenotati per slot</a><a href="/api/slots" target="_blank">Vista pubblica</a></div>
       <div className="table-wrap"><table className="table">
         <thead><tr><th>Giorno</th><th>Ora</th><th>Prenotati</th><th>Capienza</th><th>Stato</th><th>Aggiorna</th></tr></thead>

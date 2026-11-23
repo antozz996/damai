@@ -4,12 +4,12 @@ Il form registra l'ospite e genera un codice univoco. Quando le variabili email 
 
 - il QR personale in linea nell'email;
 - l'allegato `DAMAI-QR.png`;
-- il link al pass personale;
+- il link al biglietto personale (`/ticket/<token>`);
 - la data e la fascia di arrivo selezionate.
 
 Il QR apre la scheda di check-in dello staff. La pagina è protetta dalle credenziali dell'area amministrativa; le ragazze devono usare il link dello scanner `/admin/checkin`.
 
-I tre template transazionali usano i marchi ufficiali, senza testo ricreato: `public/damai/logo-email.png` (DAMAI Event Garden, estratto dal PDF ufficiale) e `public/damai/ldv/logo-email.png` (La Dolce Vita). Il ringraziamento post-uscita usa la frase: “Grazie per aver vissuto con noi questa magnifica esperienza”.
+I tre template transazionali del Damai Christmas Village (conferma, promemoria, ringraziamento dopo l'uscita) usano il marchio ufficiale `public/damai/logo-email.png` (DAMAI Event Garden, estratto dal PDF ufficiale). Il ringraziamento post-uscita usa la frase: “Grazie per aver condiviso con noi la magia del Natale”.
 
 ## 1. Verifica il dominio in Resend
 
@@ -25,9 +25,10 @@ Nel progetto Vercel `damai`, apri **Settings → Environment Variables**. Per i 
 | Variabile | Tipo | Valore |
 | --- | --- | --- |
 | `RESEND_API_KEY` | Secret | La chiave `re_...` di Resend |
-| `EMAIL_FROM` | Config | `DAMAI Open Days <eventi@damaigarden.it>` |
+| `EMAIL_FROM` | Config | `Damai Christmas Village <eventi@damaigarden.it>` |
 | `EMAIL_REPLY_TO` | Config, opzionale | L'indirizzo a cui rispondere, ad esempio `info@damaigarden.it` |
-| `PUBLIC_BASE_URL` | Config | `https://www.damaigarden.it/open-days` |
+| `PUBLIC_BASE_URL` | Config | `https://registrazioni.damaigarden.it` (dominio di questo backend) |
+| `REGISTRATIONS_OPEN` | Config | `true` per aprire le registrazioni |
 | `DATABASE_URL` | Secret | La stringa Neon di produzione |
 | `ADMIN_USER` | Secret | Utente dello staff |
 | `ADMIN_PASSWORD` | Secret | Password dello staff |
@@ -37,7 +38,7 @@ Il dominio contenuto in `EMAIL_FROM` deve essere quello verificato in Resend. Do
 
 ## 3. Prova completa
 
-1. Apri la landing e invia una registrazione usando un indirizzo email controllabile.
+1. Apri la pagina del Christmas Village e invia una registrazione usando un indirizzo email controllabile.
 2. Controlla in Resend **Emails** che la richiesta sia stata accettata e poi consegnata.
 3. Verifica che l'email mostri il QR e contenga l'allegato `DAMAI-QR.png`.
 4. Sul telefono dello staff apri `/admin/checkin`, attiva la fotocamera e inquadra il QR.

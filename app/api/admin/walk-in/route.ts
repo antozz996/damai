@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
     if (error instanceof Error) {
       if (error.message === 'NO_ACTIVE_SLOT') {
         return NextResponse.json(
-          { error: 'Nessuna fascia oraria attiva trovata per l’Open Day.' },
+          { error: 'Nessuna fascia oraria attiva trovata per il Christmas Village.' },
           { status: 404 }
         );
       }

@@ -4,6 +4,12 @@
   "installCommand": "npm install",
   "buildCommand": "npm run build",
   "outputDirectory": null,
+  "crons": [
+    {
+      "path": "/api/cron/communications",
+      "schedule": "0 8 * * *"
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",

@@ -5,9 +5,10 @@ import './home.css';
 import './admin/admin.css';
 
 export const metadata: Metadata = {
-  title: 'DAMAI Open Days 2026 | La Dolce Vita',
-  description: 'Prenota la tua visita ai DAMAI Open Days 2026. 30-31 ottobre e 1 novembre.',
-  robots: { index: true, follow: true },
+  title: 'Damai Christmas Village | 12 e 13 dicembre 2026',
+  description: 'Registrati gratuitamente al Damai Christmas Village: sabato 12 e domenica 13 dicembre 2026, dalle 16:00 alle 21:30.',
+  // Backend di registrazione: la pagina indicizzabile è quella del sito.
+  robots: { index: false, follow: false },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

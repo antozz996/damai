@@ -1,4 +1,5 @@
 import { query } from '@/lib/db';
+import { EVENT } from '@/lib/event';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,8 +14,11 @@ const STATUS_LABELS: Record<string, string> = {
 type Stats = {
   active: string;
   people: string;
-  checked_in: string;
-  exited: string;
+  entries: string;
+  exits: string;
+  present: string;
+  children: string;
+  children_present: string;
   cancelled: string;
   hot: string;
   walk_in_total: string;
@@ -32,6 +36,7 @@ type Row = {
   last_name: string;
   email: string;
   companions: number;
+  children: number;
   status: string;
   lead_stage: string;
   event_date: string;
@@ -51,7 +56,7 @@ const quickLinks = [
     href: '/admin/checkin',
     eyebrow: 'Accoglienza',
     title: 'Scanner QR',
-    text: 'Ingresso, uscita e consegna cadeau.',
+    text: EVENT.features.gift ? 'Ingresso, uscita e consegna cadeau.' : 'Ingresso e uscita degli ospiti.',
     tone: 'navy',
   },
   {
@@ -65,7 +70,7 @@ const quickLinks = [
     href: '/admin/slots',
     eyebrow: 'Configurazione',
     title: 'Fasce orarie',
-    text: 'Capienza e disponibilità dei 33 slot.',
+    text: 'Capienza e disponibilità delle fasce.',
     tone: 'cream',
   },
   {
@@ -90,21 +95,24 @@ const quickLinks = [
     tone: 'cream',
   },
   {
-    href: 'https://www.damaigarden.it/open-days',
+    href: EVENT.publicPageUrl,
     eyebrow: 'Pubblico',
     title: 'Apri il sito',
     text: 'Controlla la pagina che vedono gli ospiti.',
     tone: 'cream',
   },
-] as const;
+];
 
 export default async function AdminPage() {
   const statsResult = await query<Stats>(`
     SELECT
       COUNT(*) FILTER (WHERE status <> 'cancelled')::text AS active,
       COALESCE(SUM(1 + companions) FILTER (WHERE status IN ('registered','checked_in')), 0)::text AS people,
-      COUNT(*) FILTER (WHERE status = 'checked_in')::text AS checked_in,
-      COUNT(*) FILTER (WHERE status = 'exited')::text AS exited,
+      COALESCE(SUM(1 + companions) FILTER (WHERE checked_in_at IS NOT NULL AND status <> 'cancelled'), 0)::text AS entries,
+      COALESCE(SUM(1 + companions) FILTER (WHERE status = 'exited'), 0)::text AS exits,
+      COALESCE(SUM(1 + companions) FILTER (WHERE status = 'checked_in'), 0)::text AS present,
+      COALESCE(SUM(children) FILTER (WHERE status <> 'cancelled'), 0)::text AS children,
+      COALESCE(SUM(children) FILTER (WHERE status = 'checked_in'), 0)::text AS children_present,
       COUNT(*) FILTER (WHERE status = 'cancelled')::text AS cancelled,
       COUNT(*) FILTER (WHERE lead_stage = 'hot' AND status <> 'cancelled')::text AS hot,
       COUNT(*) FILTER (WHERE registration_mode = 'walk_in' AND status <> 'cancelled')::text AS walk_in_total,
@@ -117,23 +125,28 @@ export default async function AdminPage() {
           AND email NOT LIKE '%@no-email.damai.local'
       )::text AS walk_in_contacts
     FROM registrations
-  `);
+    WHERE edition = $1
+  `, [EVENT.edition]);
 
   const rows = await query<Row>(`
     SELECT r.id::text, r.registration_code, r.qr_token::text, r.first_name, r.last_name,
-      r.email, r.companions, r.status, r.lead_stage, s.event_date::text,
+      r.email, r.companions, r.children, r.status, r.lead_stage, s.event_date::text,
       s.start_time::text, r.created_at::text
     FROM registrations r
     JOIN open_day_slots s ON s.id = r.slot_id
+    WHERE r.edition = $1
     ORDER BY r.created_at DESC
     LIMIT 8
-  `);
+  `, [EVENT.edition]);
 
   const s = statsResult.rows[0] ?? {
     active: '0',
     people: '0',
-    checked_in: '0',
-    exited: '0',
+    entries: '0',
+    exits: '0',
+    present: '0',
+    children: '0',
+    children_present: '0',
     cancelled: '0',
     hot: '0',
     walk_in_total: '0',
@@ -149,11 +162,11 @@ export default async function AdminPage() {
         <header className="admin-header">
           <div>
             <div className="eyebrow">DAMAI · Area staff</div>
-            <h1>Open Days 2026</h1>
-            <p className="admin-intro">Il centro di comando per ospiti, fasce orarie, QR ed email.</p>
+            <h1>{EVENT.name}</h1>
+            <p className="admin-intro">{EVENT.datesLabel}, {EVENT.hoursLabel}. Il centro di comando per ospiti, fasce orarie, QR ed email.</p>
           </div>
           <div className="admin-header-actions">
-            <a className="admin-public-link" href="https://www.damaigarden.it/open-days" target="_blank" rel="noreferrer">
+            <a className="admin-public-link" href={EVENT.publicPageUrl} target="_blank" rel="noreferrer">
               Pagina pubblica ↗
             </a>
           </div>
@@ -162,9 +175,11 @@ export default async function AdminPage() {
         <section className="stats admin-stats" aria-label="Riepilogo registrazioni">
           <div className="stat"><b>{s.active}</b><span>Registrazioni totali</span></div>
           <div className="stat"><b>{s.people}</b><span>Persone attese</span></div>
-          <div className="stat"><b>{s.checked_in}</b><span>Presenti ora</span></div>
-          <div className="stat"><b>{s.exited}</b><span>Usciti</span></div>
-          <div className="stat"><b>{s.cadeau_delivered}</b><span>Cadeau consegnati</span></div>
+          <div className="stat"><b>{s.entries}</b><span>Ingressi (persone)</span></div>
+          <div className="stat"><b>{s.exits}</b><span>Uscite (persone)</span></div>
+          <div className="stat"><b>{s.present}</b><span>Presenti ora</span></div>
+          <div className="stat"><b>{s.children}</b><span>Bambini registrati ({s.children_present} presenti)</span></div>
+          {EVENT.features.gift && <div className="stat"><b>{s.cadeau_delivered}</b><span>Cadeau consegnati</span></div>}
           <div className="stat" style={{ borderLeft: '3px solid var(--gold)' }}>
             <b style={{ color: 'var(--gold)' }}>{s.walk_in_total}</b>
             <span>Walk-In ({s.walk_in_present} ora)</span>
@@ -212,7 +227,7 @@ export default async function AdminPage() {
                     <td><strong>{r.registration_code}</strong><br /><small>{r.email}</small></td>
                     <td>{r.first_name} {r.last_name}</td>
                     <td>{r.event_date}<br />{r.start_time.slice(0, 5)}</td>
-                    <td>{1 + r.companions} {1 + r.companions === 1 ? 'persona' : 'persone'}</td>
+                    <td>{1 + r.companions} {1 + r.companions === 1 ? 'persona' : 'persone'}{r.children > 0 ? ` · ${r.children} ${r.children === 1 ? 'bambino' : 'bambini'}` : ''}</td>
                     <td><span className={`pill ${r.status === 'checked_in' || r.status === 'exited' ? 'ok' : r.status === 'cancelled' ? 'cancelled' : ''}`}>{STATUS_LABELS[r.status] || r.status}</span></td>
                     <td><a className="admin-table-link" href={`/admin/registrations/${r.id}`}>Apri scheda →</a></td>
                   </tr>

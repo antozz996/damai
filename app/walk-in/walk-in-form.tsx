@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 const EVENT_TYPES = [
+  'Solo Christmas Village',
   'Matrimonio',
   '18° Compleanno',
   'Comunione',
@@ -22,6 +23,7 @@ export default function WalkInForm() {
   const [phone, setPhone] = useState('');
   const [eventType, setEventType] = useState(EVENT_TYPES[0]);
   const [companions, setCompanions] = useState(0);
+  const [children, setChildren] = useState(0);
 
   // Campi facoltativi
   const [email, setEmail] = useState('');
@@ -67,6 +69,7 @@ export default function WalkInForm() {
           phone: phone.trim(),
           eventType,
           companions,
+          children: Math.min(children, companions),
           email: email.trim() || undefined,
           plannedEventDate: plannedEventDate.trim() || undefined,
           guestCount: guestCount ? Number(guestCount) : undefined,
@@ -149,7 +152,7 @@ export default function WalkInForm() {
 
       {/* Tipo Evento - Pill Buttons */}
       <div className="walkin-field">
-        <label>A quale evento stai pensando? *</label>
+        <label>Stai pensando anche a un evento al Damai?</label>
         <div className="pill-group">
           {EVENT_TYPES.map((type) => (
             <button
@@ -167,7 +170,7 @@ export default function WalkInForm() {
 
       {/* Persone aggiuntive (Accompagnatori) */}
       <div className="walkin-field">
-        <label>Quante persone sono con te oggi? (oltre a te)</label>
+        <label>Quante persone sono con te oggi? (oltre a te, bambini compresi)</label>
         <div className="companion-selector">
           {COMPANION_OPTIONS.map((num) => (
             <button
@@ -185,6 +188,25 @@ export default function WalkInForm() {
           Gruppo totale: <strong>{1 + companions} {1 + companions === 1 ? 'persona' : 'persone'}</strong>
         </span>
       </div>
+
+      {companions > 0 && (
+        <div className="walkin-field">
+          <label>Quanti di loro sono bambini?</label>
+          <div className="companion-selector">
+            {COMPANION_OPTIONS.filter((num) => num <= companions).map((num) => (
+              <button
+                key={num}
+                type="button"
+                className={`companion-btn ${Math.min(children, companions) === num ? 'active' : ''}`}
+                onClick={() => setChildren(num)}
+                disabled={loading}
+              >
+                {num}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Dettagli Facoltativi (Accordion) */}
       <details className="walkin-details">
@@ -257,7 +279,7 @@ export default function WalkInForm() {
             disabled={loading}
           />
           <span>
-            Ho letto e accetto l’<a href="/privacy" target="_blank" rel="noopener noreferrer">informativa sulla privacy</a> per la gestione della visita e la consegna del cadeau. *
+            Ho letto e accetto l’<a href="/privacy" target="_blank" rel="noopener noreferrer">informativa sulla privacy</a> per la gestione della visita. *
           </span>
         </label>
 

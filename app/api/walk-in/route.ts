@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
     if (error instanceof Error) {
       if (error.message === 'NO_ACTIVE_SLOT') {
         return NextResponse.json(
-          { error: 'Le registrazioni walk-in sono disponibili durante gli orari dell’Open Day.' },
+          { error: 'Le registrazioni walk-in sono disponibili durante gli orari del Christmas Village.' },
           { status: 404 }
         );
       }

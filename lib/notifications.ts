@@ -13,29 +13,32 @@ type Guest = {
   startTime: string;
 };
 
-function baseUrl() {
-  return (process.env.PUBLIC_BASE_URL || 'https://www.damaigarden.it/open-days').replace(/\/$/, '');
-}
+import {
+  EVENT,
+  checkinUrl as eventCheckinUrl,
+  publicBaseUrl as baseUrl,
+  staffBaseUrl,
+  ticketUrl as eventTicketUrl,
+} from '@/lib/event';
 
-function staffBaseUrl() {
-  return (process.env.STAFF_BASE_URL || 'https://damai-rouge.vercel.app').replace(/\/$/, '');
-}
-
+// Palette natalizia: verde bosco, oro e carta avorio.
 const BRAND = {
-  ink: '#102f52',
-  blue: '#174b82',
+  ink: '#16382b',
+  blue: '#1f4d3a',
   gold: '#b4862f',
-  paper: '#f8f0e4',
-  cream: '#e7dcce',
-  line: '#cdbda8',
+  paper: '#fbf6ec',
+  cream: '#ece3d3',
+  line: '#d3c4a8',
 };
 
+/** Biglietto pubblico con QR: `${PUBLIC_BASE_URL}/ticket/<token>`. */
 function ticketUrl(guest: Guest) {
-  return `${baseUrl()}?ticket=${encodeURIComponent(guest.qrToken)}`;
+  return eventTicketUrl(guest.qrToken);
 }
 
+/** Indirizzo codificato nel QR: apre la scheda di check-in dello staff. */
 function checkinUrl(guest: Guest) {
-  return `${staffBaseUrl()}/admin/checkin/${guest.qrToken}`;
+  return eventCheckinUrl(guest.qrToken);
 }
 
 function escapeHtml(value: string) {
@@ -57,34 +60,30 @@ function emailCopy(type: CommunicationType, guest: Guest) {
   const time = guest.startTime.slice(0,5);
   const link = ticketUrl(guest);
   if (type === 'exit_thank_you') return {
-    subject: 'DAMAI · Grazie per averci visitato',
-    heading: 'Grazie per aver vissuto con noi questa magnifica esperienza',
-    text: 'È stato un piacere accoglierti al Damai. Se vuoi approfondire il tuo evento o fissare un appuntamento, il nostro team è a tua disposizione.',
-    cta: 'Ricontatta il team al Damai', link: 'https://www.damaigarden.it/#contatti',
+    subject: `${EVENT.name} · Grazie per essere stati con noi`,
+    heading: 'Grazie per aver condiviso con noi la magia del Natale',
+    text: `È stato un piacere accoglierti al ${EVENT.name}. Se stai pensando a un evento da festeggiare al Damai, il nostro team è a tua disposizione.`,
+    cta: 'Scrivi al team Damai', link: 'https://www.damaigarden.it/#contatti',
   };
   if (type === 'registration_confirmation') return {
-    subject: 'DAMAI Open Days · Registrazione confermata',
-    heading: 'La tua visita è confermata.',
-    text: `Ti aspettiamo ${date} nella fascia delle ${time}.`,
-    cta: 'Apri il tuo QR personale', link,
+    subject: `${EVENT.name} · Registrazione confermata`,
+    heading: 'Il tuo posto al Christmas Village è confermato.',
+    text: `Ti aspettiamo ${date}, con arrivo dalle ${time}. L’ingresso è gratuito: presenta all’ingresso il QR del tuo biglietto.`,
+    cta: 'Apri il biglietto con QR', link,
   };
-  if (type === 'reminder_48h') return {
-    subject: 'DAMAI Open Days · Mancano 48 ore',
-    heading: 'La Dolce Vita è quasi qui.',
-    text: `Ti ricordiamo la tua visita al Damai di ${date} alle ${time}.`,
-    cta: 'Rivedi il tuo pass', link,
-  };
-  if (type === 'reminder_24h') return {
-    subject: 'DAMAI Open Days · Ti aspettiamo domani',
-    heading: 'Ci vediamo presto al Damai.',
-    text: `La tua fascia di arrivo è ${date} alle ${time}. Tieni a portata di mano il QR personale.`,
-    cta: 'Apri il QR', link,
+  // Il promemoria parte dal cron giornaliero: il testo non dice "domani" perché
+  // può arrivare anche la mattina stessa dell'evento.
+  if (type === 'reminder_48h' || type === 'reminder_24h') return {
+    subject: `${EVENT.name} · Ti aspettiamo`,
+    heading: 'Il Christmas Village ti aspetta.',
+    text: `Ti ricordiamo la tua registrazione per ${date}, con arrivo dalle ${time}. Tieni a portata di mano il QR del biglietto da presentare all’ingresso.`,
+    cta: 'Apri il biglietto con QR', link,
   };
   return {
-    subject: 'DAMAI · Grazie per essere stati con noi',
-    heading: 'Grazie per aver vissuto La Dolce Vita con noi.',
+    subject: `${EVENT.name} · Grazie per essere stati con noi`,
+    heading: 'Grazie per aver condiviso con noi la magia del Natale',
     text: 'Il nostro team resta a disposizione per trasformare le tue idee in un evento su misura.',
-    cta: 'Rivedi la tua registrazione', link,
+    cta: 'Scopri DAMAI Event Garden', link: 'https://www.damaigarden.it/',
   };
 }
 
@@ -92,12 +91,14 @@ function renderEmailHtml(type: CommunicationType, guest: Guest, copy: ReturnType
   const firstName = escapeHtml(guest.firstName);
   const registrationCode = escapeHtml(guest.registrationCode);
   const isExit = type === 'exit_thank_you';
-  const isReminder = type === 'reminder_24h';
+  const isReminder = type === 'reminder_24h' || type === 'reminder_48h';
   const preheader = isExit
-    ? 'Grazie per aver vissuto con noi questa magnifica esperienza.'
+    ? 'Grazie per aver condiviso con noi la magia del Natale.'
     : isReminder
-      ? 'Domani ti aspettiamo per La Dolce Vita Open Days.'
-      : 'Il tuo pass personale per La Dolce Vita Open Days.';
+      ? `Manca poco al ${EVENT.name}: tieni pronto il QR.`
+      : `Il tuo biglietto gratuito per il ${EVENT.name}.`;
+  const venueLine = escapeHtml(`${EVENT.venue} · ${EVENT.address}`);
+  const infoRow = isExit ? '' : `<tr><td class="email-pad" align="center" style="padding:22px 52px 0;"><p style="margin:0;font-size:15px;line-height:1.65;color:#3c332c;">Ingresso gratuito, ${escapeHtml(EVENT.hoursLabel)}. Ti aspettano Babbo Natale, il laboratorio con la letterina e la foto, bevande tipiche, delizie natalizie e i mercatini, mentre esplori la nostra struttura.</p><p style="margin:12px 0 0;font-size:13px;line-height:1.6;color:#6f6256;">Dopo l’uscita riceverai una mail di ringraziamento.</p></td></tr>`;
   const imageBase = staffBaseUrl();
   const link = escapeHtml(copy.link);
   const heading = escapeHtml(copy.heading);
@@ -105,9 +106,8 @@ function renderEmailHtml(type: CommunicationType, guest: Guest, copy: ReturnType
   const cta = escapeHtml(copy.cta);
   const date = escapeHtml(prettyDate(guest.eventDate));
   const time = escapeHtml(guest.startTime.slice(0,5));
-  const eyebrow = isExit ? 'GRAZIE DI CUORE' : isReminder ? 'DOMANI · OPEN DAYS' : 'REGISTRAZIONE CONFERMATA';
+  const eyebrow = isExit ? 'GRAZIE DI CUORE' : isReminder ? 'PROMEMORIA' : 'REGISTRAZIONE CONFERMATA';
   const damaiLogoUrl = `${imageBase}/damai/logo-email.png`;
-  const ldvLogoUrl = `${imageBase}/damai/ldv/logo-email.png`;
 
   return `<!doctype html>
 <html lang="it">
@@ -121,7 +121,6 @@ function renderEmailHtml(type: CommunicationType, guest: Guest, copy: ReturnType
         .email-pad { padding-left: 22px !important; padding-right: 22px !important; }
         .email-title { font-size: 32px !important; }
         .email-brand-logo { width: 270px !important; }
-        .email-ldv-logo { width: 184px !important; }
         .email-card { padding-left: 18px !important; padding-right: 18px !important; }
         .email-hero { height: 170px !important; object-fit: cover !important; }
       }
@@ -134,15 +133,10 @@ function renderEmailHtml(type: CommunicationType, guest: Guest, copy: ReturnType
         <td align="center" style="padding:22px 10px;">
           <table role="presentation" class="email-shell" width="620" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:620px;background:${BRAND.paper};border:1px solid ${BRAND.line};">
             <tr>
-              <td style="padding:0;line-height:0;">
-                <img src="${imageBase}/damai/ldv/up-frame.png" width="620" alt="" style="display:block;width:100%;height:auto;border:0;">
-              </td>
-            </tr>
-            <tr>
               <td class="email-pad" align="center" style="padding:26px 52px 8px;">
                 <img class="email-brand-logo" src="${damaiLogoUrl}" width="320" alt="DAMAI Event Garden" style="display:block;width:320px;max-width:100%;height:auto;margin:0 auto;border:0;">
-                <img class="email-ldv-logo" src="${ldvLogoUrl}" width="220" alt="La Dolce Vita" style="display:block;width:220px;max-width:100%;height:auto;margin:16px auto 0;border:0;">
-                <div style="margin-top:14px;font-size:10px;line-height:1.4;letter-spacing:.32em;text-transform:uppercase;color:${BRAND.gold};">Open Days 2026</div>
+                <div style="margin-top:18px;font-family:Didot,'Bodoni 72','Bodoni Moda',Georgia,serif;font-size:26px;line-height:1.2;color:${BRAND.ink};">Christmas Village</div>
+                <div style="margin-top:10px;font-size:10px;line-height:1.4;letter-spacing:.32em;text-transform:uppercase;color:${BRAND.gold};">12 e 13 dicembre 2026 · Ingresso gratuito</div>
                 <div style="width:82px;height:1px;margin:20px auto 0;background:${BRAND.ink};"></div>
               </td>
             </tr>
@@ -153,8 +147,9 @@ function renderEmailHtml(type: CommunicationType, guest: Guest, copy: ReturnType
                 <p style="margin:0;font-size:18px;line-height:1.6;color:#3c332c;">Ciao ${firstName},<br>${text}</p>
               </td>
             </tr>
-            ${isExit ? `<tr><td style="padding:28px 32px 0;"><img class="email-hero" src="${imageBase}/damai/hero-exterior.webp" width="556" height="210" alt="Il giardino DAMAI" style="display:block;width:100%;height:210px;object-fit:cover;border:0;"></td></tr>` : `<tr><td class="email-card" align="center" style="padding:28px 32px 0;"><div style="padding:20px;background:#ffffff;border:1px solid #d6c7b5;"><img src="cid:${qrCid}" width="240" height="240" alt="QR code personale DAMAI" style="display:block;width:240px;height:240px;margin:0 auto;border:0;"><p style="margin:14px 0 0;font-size:13px;line-height:1.4;color:#6f6256;">Mostra questo QR all’ingresso.<br>È allegato anche come immagine.</p></div></td></tr>`}
+            ${isExit ? `<tr><td style="padding:28px 32px 0;"><img class="email-hero" src="${imageBase}/damai/hero-exterior.webp" width="556" height="210" alt="Il giardino DAMAI" style="display:block;width:100%;height:210px;object-fit:cover;border:0;"></td></tr>` : `<tr><td class="email-card" align="center" style="padding:28px 32px 0;"><div style="padding:20px;background:#ffffff;border:1px solid #d6c7b5;"><img src="cid:${qrCid}" width="240" height="240" alt="QR code personale DAMAI" style="display:block;width:240px;height:240px;margin:0 auto;border:0;"><p style="margin:14px 0 0;font-size:13px;line-height:1.4;color:#6f6256;">Presenta questo QR all’ingresso.<br>È allegato anche come immagine.</p></div></td></tr>`}
             ${!isExit ? `<tr><td class="email-pad" align="center" style="padding:22px 52px 0;"><table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-top:1px solid ${BRAND.line};border-bottom:1px solid ${BRAND.line};"><tr><td style="padding:15px 8px;text-align:center;font-size:14px;color:#5e5147;"><span style="display:block;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:${BRAND.gold};">Giorno</span><strong style="display:block;margin-top:5px;color:${BRAND.ink};font-weight:400;">${date}</strong></td><td style="padding:15px 8px;text-align:center;font-size:14px;color:#5e5147;border-left:1px solid ${BRAND.line};"><span style="display:block;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:${BRAND.gold};">Arrivo</span><strong style="display:block;margin-top:5px;color:${BRAND.ink};font-weight:400;">${time}</strong></td></tr></table></td></tr>` : ''}
+            ${infoRow}
             <tr>
               <td align="center" style="padding:30px 52px 0;">
                 <a href="${link}" style="display:inline-block;padding:16px 25px;background:${BRAND.ink};color:#ffffff;text-decoration:none;font-size:12px;line-height:1;letter-spacing:.16em;text-transform:uppercase;">${cta}</a>
@@ -164,12 +159,7 @@ function renderEmailHtml(type: CommunicationType, guest: Guest, copy: ReturnType
               <td class="email-pad" align="center" style="padding:27px 52px 36px;">
                 <div style="width:82px;height:1px;margin:0 auto 20px;background:${BRAND.gold};"></div>
                 <p style="margin:0;font-size:13px;line-height:1.5;color:#6f6256;">Codice registrazione: <strong style="color:${BRAND.ink};">${registrationCode}</strong></p>
-                <p style="margin:10px 0 0;font-size:12px;line-height:1.5;color:#817468;">DAMAI Event Garden · Via Marina di Varcaturo</p>
-              </td>
-            </tr>
-            <tr>
-              <td style="padding:0;line-height:0;">
-                <img src="${imageBase}/damai/ldv/shield.png" width="620" alt="" style="display:block;width:100%;height:auto;border:0;">
+                <p style="margin:10px 0 0;font-size:12px;line-height:1.5;color:#817468;">${venueLine}</p>
               </td>
             </tr>
           </table>

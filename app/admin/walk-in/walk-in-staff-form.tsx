@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 const EVENT_TYPES = [
+  'Solo Christmas Village',
   'Matrimonio',
   '18° Compleanno',
   'Comunione',
@@ -22,6 +23,7 @@ export default function WalkInStaffForm() {
   const [phone, setPhone] = useState('');
   const [eventType, setEventType] = useState(EVENT_TYPES[0]);
   const [companions, setCompanions] = useState(0);
+  const [children, setChildren] = useState(0);
   const [email, setEmail] = useState('');
   const [notes, setNotes] = useState('');
   const [immediateCheckin, setImmediateCheckin] = useState(true);
@@ -85,6 +87,7 @@ export default function WalkInStaffForm() {
           phone: phone.trim(),
           eventType,
           companions,
+          children: Math.min(children, companions),
           email: email.trim() || undefined,
           notes: notes.trim() || undefined,
           privacyConsent: true,
@@ -177,7 +180,7 @@ export default function WalkInStaffForm() {
           </div>
 
           <div className="staff-field">
-            <label>Tipo Evento *</label>
+            <label>Interesse (evento da organizzare)</label>
             <div className="staff-pills">
               {EVENT_TYPES.map((type) => (
                 <button
@@ -194,7 +197,7 @@ export default function WalkInStaffForm() {
           </div>
 
           <div className="staff-field">
-            <label>Accompagnatori (oltre al titolare)</label>
+            <label>Accompagnatori (oltre al titolare, bambini compresi)</label>
             <div className="staff-companions">
               {COMPANION_OPTIONS.map((num) => (
                 <button
@@ -212,6 +215,25 @@ export default function WalkInStaffForm() {
               Totale gruppo: <strong>{1 + companions}</strong> {1 + companions === 1 ? 'persona' : 'persone'}
             </span>
           </div>
+
+          {companions > 0 && (
+            <div className="staff-field">
+              <label>Di cui bambini</label>
+              <div className="staff-companions">
+                {COMPANION_OPTIONS.filter((num) => num <= companions).map((num) => (
+                  <button
+                    key={num}
+                    type="button"
+                    onClick={() => setChildren(num)}
+                    className={`staff-companion-btn ${Math.min(children, companions) === num ? 'active' : ''}`}
+                    disabled={loading}
+                  >
+                    {num}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="staff-field">
             <label htmlFor="staff-email">Email (Opzionale)</label>
@@ -328,7 +350,7 @@ export default function WalkInStaffForm() {
               wordBreak: 'break-all',
             }}
           >
-            https://www.damaigarden.it/open-days/walk-in
+            /walk-in su questo dominio (attiva solo con WALK_IN_PUBLIC=true)
           </div>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import { query } from '@/lib/db';
+import { EVENT } from '@/lib/event';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,6 +15,7 @@ type SlotGuestRow = {
   last_name: string | null;
   email: string | null;
   companions: number | null;
+  children: number | null;
   status: string | null;
 };
 
@@ -24,6 +26,7 @@ type Guest = {
   lastName: string;
   email: string;
   companions: number;
+  children: number;
   status: string;
 };
 
@@ -76,6 +79,7 @@ function buildSlots(rows: SlotGuestRow[]) {
         lastName: row.last_name,
         email: row.email,
         companions,
+        children: row.children ?? 0,
         status: row.status,
       });
       current.reservedPeople += 1 + companions;
@@ -100,13 +104,15 @@ export default async function SlotOverviewPage() {
       r.last_name,
       r.email,
       r.companions,
+      r.children,
       r.status
     FROM open_day_slots s
     LEFT JOIN registrations r
       ON r.slot_id = s.id
       AND r.status <> 'cancelled'
+    WHERE s.edition = $1
     ORDER BY s.event_date, s.start_time, r.last_name, r.first_name
-  `);
+  `, [EVENT.edition]);
 
   const slots = buildSlots(result.rows);
   const days = [...new Set(slots.map((slot) => slot.eventDate))];
@@ -137,7 +143,7 @@ export default async function SlotOverviewPage() {
             <section className="slot-day-section" key={day} aria-labelledby={`day-${day}`}>
               <div className="slot-day-heading">
                 <div>
-                  <div className="eyebrow">Open Day</div>
+                  <div className="eyebrow">{EVENT.shortName}</div>
                   <h2 id={`day-${day}`}>{dateLabel(day)}</h2>
                 </div>
                 <div className="slot-day-totals"><strong>{dayPeople}</strong> persone attive · <strong>{dayReservations}</strong> prenotazioni</div>
@@ -159,7 +165,7 @@ export default async function SlotOverviewPage() {
                         {!slot.guests.length && <p className="slot-empty">Nessuna prenotazione in questa fascia.</p>}
                         {slot.guests.map((guest) => (
                           <a className="slot-guest" href={`/admin/registrations/${guest.id}`} key={guest.id}>
-                            <span><strong>{guest.firstName} {guest.lastName}</strong><small>{guest.email} · {1 + guest.companions} {1 + guest.companions === 1 ? 'persona' : 'persone'}</small></span>
+                            <span><strong>{guest.firstName} {guest.lastName}</strong><small>{guest.email} · {1 + guest.companions} {1 + guest.companions === 1 ? 'persona' : 'persone'}{guest.children > 0 ? ` · ${guest.children} ${guest.children === 1 ? 'bambino' : 'bambini'}` : ''}</small></span>
                             <span className={`pill ${guest.status === 'checked_in' || guest.status === 'exited' ? 'ok' : ''}`}>{STATUS_LABELS[guest.status] || guest.status}</span>
                           </a>
                         ))}

@@ -1,5 +1,7 @@
 # La Dolce Vita — campaign sources
 
+> Archivio: questi materiali appartengono all'edizione Open Days 2026 «La Dolce Vita». Il Damai Christmas Village (dicembre 2026) non usa queste tavole né questi loghi.
+
 The public homepage follows the six DAMAI campaign boards supplied by the owner on 8–9 September 2026. The original files stay intact and scale proportionally. Board lettering stays in the artwork; section headings, navigation and the working registration form are HTML.
 
 ## Original DAMAI logo

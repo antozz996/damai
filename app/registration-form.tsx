@@ -56,16 +56,22 @@ export default function RegistrationForm() {
     setLoading(true);
 
     const fd = new FormData(e.currentTarget);
+    if (Number(fd.get('children') || 0) > Number(fd.get('companions') || 0)) {
+      setLoading(false);
+      return setError('Il numero di bambini non può superare quello degli accompagnatori.');
+    }
     const url = new URL(window.location.href);
     const payload = {
       firstName: fd.get('firstName'),
       lastName: fd.get('lastName'),
       phone: fd.get('phone'),
       email: fd.get('email'),
-      eventType: fd.get('eventType'),
+      eventType: fd.get('eventType') || undefined,
       plannedEventDate: fd.get('plannedEventDate'),
       guestCount: fd.get('guestCount') ? Number(fd.get('guestCount')) : undefined,
       companions: Number(fd.get('companions') || 0),
+      children: Number(fd.get('children') || 0),
+      website: fd.get('website') || undefined,
       source: fd.get('source') || undefined,
       notes: fd.get('notes') || undefined,
       slotId,
@@ -84,7 +90,7 @@ export default function RegistrationForm() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Registrazione non riuscita.');
-      window.location.href = `/open-days?ticket=${encodeURIComponent(data.qrToken)}`;
+      window.location.href = `/ticket/${encodeURIComponent(data.qrToken)}`;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registrazione non riuscita.');
       setLoading(false);
@@ -95,16 +101,22 @@ export default function RegistrationForm() {
 
   return (
     <form onSubmit={submit} className="form-main">
+      {/* Honeypot anti-bot: invisibile agli ospiti, deve restare vuoto. */}
+      <div aria-hidden="true" style={{ position: 'absolute', left: '-9999px', width: 1, height: 1, overflow: 'hidden' }}>
+        <label htmlFor="website">Sito web</label>
+        <input id="website" name="website" type="text" tabIndex={-1} autoComplete="off" />
+      </div>
       <div className="grid">
         <div className="field"><label htmlFor="firstName">Nome *</label><input id="firstName" name="firstName" required minLength={2} autoComplete="given-name" /></div>
         <div className="field"><label htmlFor="lastName">Cognome *</label><input id="lastName" name="lastName" required minLength={2} autoComplete="family-name" /></div>
         <div className="field"><label htmlFor="phone">Telefono *</label><input id="phone" name="phone" type="tel" required autoComplete="tel" /></div>
         <div className="field"><label htmlFor="email">Email *</label><input id="email" name="email" type="email" required autoComplete="email" /></div>
-        <div className="field"><label htmlFor="eventType">Tipologia di evento *</label><select id="eventType" name="eventType" required defaultValue=""><option value="" disabled>Seleziona</option>{EVENT_TYPES.map(x => <option key={x}>{x}</option>)}</select></div>
+        <div className="field"><label htmlFor="eventType">Stai pensando a un evento al Damai? (facoltativo)</label><select id="eventType" name="eventType" defaultValue=""><option value="">No, vengo per il Christmas Village</option>{EVENT_TYPES.map(x => <option key={x}>{x}</option>)}</select></div>
         <div className="field"><label htmlFor="plannedEventDate">Data prevista dell'evento</label><input id="plannedEventDate" name="plannedEventDate" type="date" /></div>
         <div className="field"><label htmlFor="guestCount">Numero indicativo ospiti</label><input id="guestCount" name="guestCount" type="number" min="1" max="1000" placeholder="Es. 120" /></div>
-        <div className="field"><label htmlFor="companions">Accompagnatori Open Day</label><select id="companions" name="companions" defaultValue="0">{Array.from({length:6},(_,i)=><option value={i} key={i}>{i}</option>)}</select></div>
-        <div className="field full"><label htmlFor="source">Come hai conosciuto l'evento?</label><select id="source" name="source" defaultValue=""><option value="">Seleziona</option><option>Instagram</option><option>Facebook</option><option>Google</option><option>Passaparola</option><option>Già cliente / già visitato DAMAI</option><option>Altro</option></select></div>
+        <div className="field"><label htmlFor="companions">Accompagnatori (bambini compresi)</label><select id="companions" name="companions" defaultValue="0">{Array.from({length:11},(_,i)=><option value={i} key={i}>{i}</option>)}</select></div>
+        <div className="field"><label htmlFor="children">Di cui bambini</label><select id="children" name="children" defaultValue="0">{Array.from({length:11},(_,i)=><option value={i} key={i}>{i}</option>)}</select></div>
+        <div className="field full"><label htmlFor="source">Come hai conosciuto l'evento?</label><select id="source" name="source" defaultValue=""><option value="">Seleziona</option><option>Volantino</option><option>Instagram</option><option>Facebook</option><option>Google</option><option>Passaparola</option><option>Già cliente / già visitato DAMAI</option><option>Altro</option></select></div>
         <div className="field full"><label htmlFor="notes">Note o esigenze particolari</label><textarea id="notes" name="notes" placeholder="Facoltativo" /></div>
         <div className="field full slots-area">
           <label>Giorno e fascia oraria di arrivo *</label>
@@ -121,7 +133,7 @@ export default function RegistrationForm() {
           ))}
         </div>
         <div className="field full checks">
-          <label className="check"><input name="privacyConsent" type="checkbox" required /> <span>Ho letto l’<a href="/open-days/privacy" target="_blank" rel="noopener noreferrer">informativa privacy</a> e acconsento al trattamento dei dati necessario alla gestione della registrazione e della visita. *</span></label>
+          <label className="check"><input name="privacyConsent" type="checkbox" required /> <span>Ho letto l’<a href="/privacy" target="_blank" rel="noopener noreferrer">informativa privacy</a> e acconsento al trattamento dei dati necessario alla gestione della registrazione e della visita. *</span></label>
           <label className="check"><input name="marketingConsent" type="checkbox" /> <span>Acconsento a ricevere comunicazioni commerciali e aggiornamenti da DAMAI. Facoltativo.</span></label>
         </div>
         {error && <div className="field full error" role="alert">{error}</div>}

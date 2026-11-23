@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { transaction } from '@/lib/db';
+import { EVENT } from '@/lib/event';
 
 export async function POST(req: NextRequest) {
   const form = await req.formData();
@@ -14,7 +15,7 @@ export async function POST(req: NextRequest) {
     await transaction(async client => {
       const used = await client.query<{used:string}>(`SELECT COALESCE(SUM(1+companions),0)::text AS used FROM registrations WHERE slot_id=$1 AND status IN ('registered','checked_in')`,[id]);
       if (capacity < Number(used.rows[0]?.used || 0)) throw new Error('CAPACITY_TOO_LOW');
-      await client.query(`UPDATE open_day_slots SET capacity=$1,is_active=$2,updated_at=now() WHERE id=$3`,[capacity,isActive,id]);
+      await client.query(`UPDATE open_day_slots SET capacity=$1,is_active=$2,updated_at=now() WHERE id=$3 AND edition=$4`,[capacity,isActive,id,EVENT.edition]);
     });
   } catch (error) {
     if (error instanceof Error && error.message === 'CAPACITY_TOO_LOW') return new NextResponse('La capienza non può essere inferiore alle persone già registrate.',{status:409});

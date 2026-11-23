@@ -1,4 +1,5 @@
 import { query } from '@/lib/db';
+import { EVENT } from '@/lib/event';
 import RegistrationActions from './actions';
 
 export const dynamic = 'force-dynamic';
@@ -34,6 +35,7 @@ type RegistrationRow = {
   planned_event_date: string | null;
   guest_count: number | null;
   companions: number;
+  children: number;
   source: string | null;
   status: string;
   lead_stage: string;
@@ -60,20 +62,22 @@ export default async function RegistrationsPage({ searchParams }: { searchParams
       COUNT(*) FILTER (WHERE status = 'cancelled')::text AS cancelled,
       COALESCE(SUM(1 + companions) FILTER (WHERE status IN ('registered','checked_in')), 0)::text AS people
     FROM registrations
-  `);
+    WHERE edition = $1
+  `, [EVENT.edition]);
 
   const rows = await query<RegistrationRow>(`
     SELECT r.id::text, r.registration_code, r.qr_token::text, r.first_name, r.last_name,
       r.phone, r.email, r.event_type, r.planned_event_date::text, r.guest_count,
-      r.companions, r.source, r.status, r.lead_stage, s.event_date::text,
+      r.companions, r.children, r.source, r.status, r.lead_stage, s.event_date::text,
       s.start_time::text, r.created_at::text
     FROM registrations r
     JOIN open_day_slots s ON s.id = r.slot_id
     WHERE ($1 = '' OR r.registration_code ILIKE '%' || $1 || '%' OR r.first_name ILIKE '%' || $1 || '%' OR r.last_name ILIKE '%' || $1 || '%' OR r.email ILIKE '%' || $1 || '%' OR r.phone ILIKE '%' || $1 || '%')
       AND ($2 = 'all' OR ($2 = 'active' AND r.status <> 'cancelled') OR ($2 = 'cancelled' AND r.status = 'cancelled'))
+      AND r.edition = $3
     ORDER BY r.created_at DESC
     LIMIT 500
-  `, [q, status]);
+  `, [q, status, EVENT.edition]);
 
   const counts = countsResult.rows[0] ?? { active: '0', cancelled: '0', people: '0' };
 
@@ -122,7 +126,7 @@ export default async function RegistrationsPage({ searchParams }: { searchParams
                   <td><strong>{r.first_name} {r.last_name}</strong><br /><small>{r.source || 'Fonte non indicata'}</small></td>
                   <td>{r.phone}<br /><small>{r.email}</small></td>
                   <td>{r.event_date}<br />{r.start_time.slice(0, 5)}</td>
-                  <td>{1 + r.companions} {1 + r.companions === 1 ? 'persona' : 'persone'}</td>
+                  <td>{1 + r.companions} {1 + r.companions === 1 ? 'persona' : 'persone'}{r.children > 0 ? <><br /><small>{r.children} {r.children === 1 ? 'bambino' : 'bambini'}</small></> : null}</td>
                   <td><span className={`pill ${r.status === 'checked_in' || r.status === 'exited' ? 'ok' : r.status === 'cancelled' ? 'cancelled' : ''}`}>{STATUS_LABELS[r.status] || r.status}</span></td>
                   <td>
                     <form method="post" action="/api/admin/lead-stage" className="lead-form">

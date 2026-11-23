@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { transaction } from '@/lib/db';
+import { EVENT } from '@/lib/event';
 
 const editSchema = z.object({
   firstName: z.string().trim().min(2).max(80),
@@ -11,6 +12,7 @@ const editSchema = z.object({
   plannedEventDate: z.string().trim().max(20),
   guestCount: z.preprocess((value) => value === '' || value === null ? undefined : value, z.coerce.number().int().min(1).max(1000).optional()),
   companions: z.coerce.number().int().min(0).max(10),
+  children: z.coerce.number().int().min(0).max(10),
   slotId: z.string().uuid(),
   source: z.string().trim().max(100),
   notes: z.string().trim().max(1000),
@@ -38,7 +40,7 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
   if (intent === 'cancel') {
     try {
       await transaction(async (client) => {
-        const found = await client.query<{ status: string }>(`SELECT status FROM registrations WHERE id=$1 FOR UPDATE`, [id]);
+        const found = await client.query<{ status: string }>(`SELECT status FROM registrations WHERE id=$1 AND edition=$2 FOR UPDATE`, [id, EVENT.edition]);
         if (!found.rowCount) throw new Error('NOT_FOUND');
         if (found.rows[0].status === 'cancelled') return;
 
@@ -57,7 +59,7 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
   if (intent === 'delete') {
     try {
       await transaction(async (client) => {
-        const found = await client.query<{ status: string }>(`SELECT status FROM registrations WHERE id=$1 FOR UPDATE`, [id]);
+        const found = await client.query<{ status: string }>(`SELECT status FROM registrations WHERE id=$1 AND edition=$2 FOR UPDATE`, [id, EVENT.edition]);
         if (!found.rowCount) throw new Error('NOT_FOUND');
         if (found.rows[0].status !== 'cancelled') throw new Error('MUST_CANCEL_FIRST');
         await client.query(`DELETE FROM registrations WHERE id=$1`, [id]);
@@ -80,6 +82,7 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
     plannedEventDate: String(form.get('plannedEventDate') || ''),
     guestCount: String(form.get('guestCount') || ''),
     companions: String(form.get('companions') || '0'),
+    children: String(form.get('children') || '0'),
     slotId: String(form.get('slotId') || ''),
     source: String(form.get('source') || ''),
     notes: String(form.get('notes') || ''),
@@ -88,14 +91,16 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
   if (!parsed.success) return redirectToEdit(req, id, 'error=Dati%20non%20validi%20o%20incompleti');
 
   const data = parsed.data;
+  // I bambini sono compresi negli accompagnatori.
+  if (data.children > data.companions) return redirectToEdit(req, id, 'error=I%20bambini%20non%20possono%20superare%20gli%20accompagnatori');
   try {
     await transaction(async (client) => {
-      const current = await client.query<{ status: string; slot_id: string }>(`SELECT status, slot_id::text FROM registrations WHERE id=$1 FOR UPDATE`, [id]);
+      const current = await client.query<{ status: string; slot_id: string }>(`SELECT status, slot_id::text FROM registrations WHERE id=$1 AND edition=$2 FOR UPDATE`, [id, EVENT.edition]);
       if (!current.rowCount) throw new Error('NOT_FOUND');
 
       const targetSlot = await client.query<{ id: string; capacity: number; is_active: boolean }>(
-        `SELECT id::text, capacity, is_active FROM open_day_slots WHERE id=$1 FOR UPDATE`,
-        [data.slotId],
+        `SELECT id::text, capacity, is_active FROM open_day_slots WHERE id=$1 AND edition=$2 FOR UPDATE`,
+        [data.slotId, EVENT.edition],
       );
       if (!targetSlot.rowCount) throw new Error('SLOT_NOT_FOUND');
       if (!targetSlot.rows[0].is_active && current.rows[0].slot_id !== data.slotId) throw new Error('SLOT_INACTIVE');
@@ -114,12 +119,12 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
           first_name=$1, last_name=$2, phone=$3, email=$4, event_type=$5,
           planned_event_date=NULLIF($6,'')::date, guest_count=$7, companions=$8,
           slot_id=$9, source=NULLIF($10,''), notes=NULLIF($11,''),
-          marketing_consent=$12, updated_at=now()
+          marketing_consent=$12, children=$14, updated_at=now()
         WHERE id=$13
       `, [
         data.firstName, data.lastName, data.phone, data.email.toLowerCase(), data.eventType,
         data.plannedEventDate, data.guestCount ?? null, data.companions, data.slotId,
-        data.source, data.notes, data.marketingConsent, id,
+        data.source, data.notes, data.marketingConsent, id, data.children,
       ]);
 
       await client.query(`
@@ -146,7 +151,7 @@ export async function DELETE(req: NextRequest, { params }: RouteContext) {
   if (!/^[0-9a-f-]{36}$/i.test(id)) return NextResponse.json({ error: 'ID non valido' }, { status: 400 });
   try {
     await transaction(async (client) => {
-      const result = await client.query(`DELETE FROM registrations WHERE id=$1 AND status='cancelled' RETURNING id`, [id]);
+      const result = await client.query(`DELETE FROM registrations WHERE id=$1 AND edition=$2 AND status='cancelled' RETURNING id`, [id, EVENT.edition]);
       if (!result.rowCount) throw new Error('CANCEL_REQUIRED');
     });
     return NextResponse.json({ ok: true });

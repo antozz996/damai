@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import localFont from 'next/font/local';
 import RegistrationForm from './registration-form';
+import { EVENT } from '@/lib/event';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,39 +23,10 @@ function DamaiLogo() {
   );
 }
 
-type CampaignBoardProps = {
-  id: string;
-  title: string;
-  src: string;
-  alt: string;
-  width?: number;
-  priority?: boolean;
-  showRegistration?: boolean;
-};
-
-function CampaignBoard({ id, title, src, alt, width = 1081, priority = false, showRegistration = false }: CampaignBoardProps) {
-  return (
-    <section className={`ldv-board-section${showRegistration ? ' ldv-board-with-action' : ''}`} id={id} aria-labelledby={`${id}-title`}>
-      <h2 className="ldv-visually-hidden" id={`${id}-title`}>{title}</h2>
-      <div className="ldv-board-art">
-        <Image
-          src={src}
-          alt={alt}
-          width={width}
-          height={1350}
-          sizes="100vw"
-          priority={priority}
-        />
-      </div>
-      {showRegistration && (
-        <div className="ldv-board-action">
-          <a className="ldv-button ldv-register-button" href="#registrazione-form">Registrati</a>
-        </div>
-      )}
-    </section>
-  );
-}
-
+/**
+ * Pagina di registrazione di riserva: quella ufficiale è sul sito
+ * (https://www.damaigarden.it/christmas-village/) e usa le stesse API.
+ */
 export default function HomePage() {
   return (
     <main className={['ldv-page', didoneFallback.variable].join(' ')} id="top">
@@ -63,70 +35,43 @@ export default function HomePage() {
       <header className="ldv-nav">
         <a href="#top" className="ldv-nav-brand" aria-label="DAMAI, inizio pagina"><DamaiLogo /></a>
         <nav aria-label="Navigazione principale">
-          <a href="#programma">Le giornate</a>
+          <a href="#programma">Il villaggio</a>
           <a href="#registrazione-form" className="ldv-nav-book">Registrati</a>
         </nav>
       </header>
 
-      <CampaignBoard
-        id="invito"
-        title="DAMAI Open Days — La Dolce Vita"
-        src="/damai/ldv/boards/invitation-board.jpg"
-        alt="DAMAI Open Days La Dolce Vita, 30 e 31 ottobre e 1 novembre 2026"
-        width={1080}
-        priority
-        showRegistration
-      />
-
-      <CampaignBoard
-        id="esperienza"
-        title="More than an open day"
-        src="/damai/ldv/boards/experience-board.jpg"
-        alt="La Dolce Vita: tre giorni dedicati alla bellezza, all'ispirazione e all'arte di celebrare"
-      />
-
-      <CampaignBoard
-        id="programma"
-        title="Tre giorni, una sola experience"
-        src="/damai/ldv/boards/dates-board.jpg"
-        alt="Tre giornate Open Days: 30 ottobre, 31 ottobre e 1 novembre 2026, dalle 16 alle 21"
-      />
-
-      <CampaignBoard
-        id="dedicato"
-        title="Dedicato a te"
-        src="/damai/ldv/boards/dedicated-board.jpg"
-        alt="Dedicato a te: meno attese, nessuna visita frettolosa, a tu per tu"
-      />
-
-      <section className="ldv-board-section ldv-registration-stage" id="registrazione" aria-labelledby="registrazione-title">
-        <h2 className="ldv-visually-hidden" id="registrazione-title">Registrati ora</h2>
-        <div className="ldv-board-art">
-          <Image
-            src="/damai/ldv/boards/registration-board.jpg"
-            alt="Registrati ora agli Open Days DAMAI: compila il modulo, scegli il giorno e lo slot, ricevi la conferma con QR"
-            width={1081}
-            height={1350}
-            sizes="100vw"
-          />
+      <section className="ldv-dates" id="programma" aria-labelledby="programma-title">
+        <div className="ldv-container">
+          <h1 className="ldv-heading" id="programma-title">{EVENT.name}</h1>
+          <span className="ldv-rule" aria-hidden="true" />
+          <p className="ldv-hours">12 <span>e</span> 13 dicembre 2026</p>
+          <p className="ldv-section-note">
+            Sabato e domenica, {EVENT.hoursLabel} ({EVENT.lastEntryLabel}).<br />
+            <strong>Ingresso gratuito con registrazione obbligatoria.</strong>
+          </p>
+          <p className="ldv-section-note">
+            Ti aspettano Babbo Natale, il laboratorio con la letterina e la foto, bevande tipiche,
+            delizie natalizie e i mercatini, mentre esplori la nostra struttura.
+          </p>
+          <p className="ldv-section-note">{EVENT.venue} · {EVENT.address}</p>
+          <a className="ldv-button" href="#registrazione-form">Registrati</a>
         </div>
+      </section>
+
+      <section className="ldv-registration-stage" id="registrazione" aria-labelledby="registrazione-title">
         <div className="ldv-registration-form-shell" id="registrazione-form" tabIndex={-1}>
-          <p className="ldv-registration-form-intro">Completa il modulo per scegliere la giornata e la fascia oraria della tua visita.</p>
+          <h2 className="ldv-heading" id="registrazione-title" style={{ textAlign: 'center' }}>Registrati ora</h2>
+          <p className="ldv-registration-form-intro">
+            Scegli il giorno e la fascia oraria di arrivo: riceverai via email il biglietto con il QR da presentare all’ingresso.
+          </p>
           <RegistrationForm />
         </div>
       </section>
 
-      <CampaignBoard
-        id="chiusura"
-        title="La Dolce Vita is waiting for you"
-        src="/damai/ldv/boards/closing-board.jpg"
-        alt="La Dolce Vita is waiting for you: registrati agli Open Days DAMAI"
-      />
-
       <footer className="ldv-footer">
         <span className="ldv-nav-brand"><DamaiLogo /></span>
-        <p>Open Days 2026 · La Dolce Vita</p>
-        <a href="/open-days/privacy">Informativa privacy</a>
+        <p>{EVENT.name} · 12 e 13 dicembre 2026</p>
+        <a href="/privacy">Informativa privacy</a>
       </footer>
     </main>
   );

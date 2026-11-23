@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { transaction } from '@/lib/db';
+import { EVENT } from '@/lib/event';
 import { sendEmail, type Guest } from '@/lib/notifications';
 
 export const runtime = 'nodejs';
@@ -41,9 +42,9 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
           r.registration_code, r.qr_token::text, s.event_date::text, s.start_time::text
         FROM registrations r
         JOIN open_day_slots s ON s.id=r.slot_id
-        WHERE r.id=$1
+        WHERE r.id=$1 AND r.edition=$2
         FOR UPDATE OF r
-      `, [id]);
+      `, [id, EVENT.edition]);
 
       const registration = result.rows[0];
       if (!registration) throw new Error('NOT_FOUND');

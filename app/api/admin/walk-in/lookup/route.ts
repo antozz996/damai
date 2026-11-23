@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { EVENT } from '@/lib/event';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,14 +25,14 @@ export async function GET(req: NextRequest) {
   }>(
     `SELECT id::text, registration_code, first_name, last_name, phone, email, status, qr_token::text
      FROM registrations
-     WHERE (
+     WHERE edition = $2 AND (
        phone ILIKE ('%' || $1 || '%')
        OR registration_code ILIKE ('%' || $1 || '%')
        OR (first_name || ' ' || last_name) ILIKE ('%' || $1 || '%')
      )
      ORDER BY created_at DESC
      LIMIT 5`,
-    [clean]
+    [clean, EVENT.edition]
   );
 
   return NextResponse.json({

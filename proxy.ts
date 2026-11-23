@@ -1,14 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { EVENT } from '@/lib/event';
+import { PUBLIC_CORS_ROUTES, corsHeaders } from '@/lib/cors';
 
 /**
- * Open Days 2026 conclusi (30 ott – 1 nov 2026).
- * Tutte le rotte pubbliche (prenotazione, walk-in, biglietti, API pubbliche, cron)
- * rispondono 410 Gone: nessun nuovo dato personale viene raccolto.
- * Restano attivi solo l'area admin protetta (export e consultazione dei lead
- * già raccolti) e l'informativa privacy.
- * Per riaprire una futura edizione: impostare OPEN_DAYS_CLOSED a false.
+ * Damai Christmas Village (12-13 dicembre 2026).
+ *
+ * - L'area staff (/admin, /api/admin) è SEMPRE protetta da Basic Auth.
+ * - L'informativa privacy è sempre raggiungibile.
+ * - Con REGISTRATIONS_OPEN diverso da 'true' tutte le altre rotte rispondono 410 Gone:
+ *   nessun nuovo dato personale viene raccolto.
+ * - Con REGISTRATIONS_OPEN=true sono pubbliche (senza autenticazione) solo le rotte
+ *   elencate in isPublicPath(); tutto il resto resta dietro Basic Auth.
+ * - Il preflight CORS (OPTIONS) delle API pubbliche riceve sempre risposta qui,
+ *   così il form della pagina statica può leggere anche l'eventuale 410.
  */
-const OPEN_DAYS_CLOSED = true;
+
+const CLOSED_MESSAGE = `Le registrazioni al ${EVENT.name} non sono attive in questo momento.`;
 
 const CLOSED_HTML = `<!doctype html>
 <html lang="it">
@@ -16,7 +23,7 @@ const CLOSED_HTML = `<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<title>Open Days conclusi | DAMAI Event Garden</title>
+<title>Registrazioni chiuse | ${EVENT.name}</title>
 <style>
   body{margin:0;min-height:100vh;display:grid;place-items:center;background:#07100d;color:#f5f0e7;font-family:Georgia,"Times New Roman",serif;text-align:center;padding:24px}
   main{max-width:560px}
@@ -26,9 +33,9 @@ const CLOSED_HTML = `<!doctype html>
 </head>
 <body>
 <main>
-  <h1>Gli Open Days 2026 sono conclusi</h1>
-  <p>Grazie a tutti per la partecipazione. Le prenotazioni sono chiuse e questa pagina non raccoglie più dati.</p>
-  <p>Per informazioni sugli eventi visita <a href="https://www.damaigarden.it/">damaigarden.it</a> o scrivici su WhatsApp al <a href="https://wa.me/393762115726">+39 376 211 5726</a>.</p>
+  <h1>Le registrazioni al ${EVENT.name} sono chiuse</h1>
+  <p>In questo momento non è possibile registrarsi e questa pagina non raccoglie dati.</p>
+  <p>Per informazioni sull'evento visita <a href="${EVENT.publicPageUrl}">la pagina del Christmas Village</a> o scrivici su WhatsApp al <a href="https://wa.me/393762115726">+39 376 211 5726</a>.</p>
   <p><a href="/privacy">Informativa privacy</a></p>
 </main>
 </body>
@@ -40,22 +47,42 @@ const CLOSED_HEADERS = {
 };
 
 function isAdminPath(pathname: string): boolean {
-  return pathname.startsWith('/admin')
-    || pathname.startsWith('/api/admin')
-    || pathname.startsWith('/open-days/admin')
-    || pathname.startsWith('/open-days/api/admin');
+  return pathname === '/admin'
+    || pathname.startsWith('/admin/')
+    || pathname === '/api/admin'
+    || pathname.startsWith('/api/admin/');
 }
 
 function isPrivacyPath(pathname: string): boolean {
-  return pathname === '/privacy' || pathname === '/open-days/privacy';
+  return pathname === '/privacy';
 }
 
-function closedResponse(pathname: string): NextResponse {
-  const api = pathname.startsWith('/api/') || pathname.startsWith('/open-days/api/');
-  if (api) {
+/** Rotte raggiungibili senza credenziali quando le registrazioni sono aperte. */
+function isPublicPath(pathname: string): boolean {
+  if (pathname === '/') return true; // pagina di registrazione di riserva
+  if (pathname === '/api/slots' || pathname === '/api/register') return true;
+  if (pathname.startsWith('/ticket/')) return true;
+  // Il cron si autentica da solo con CRON_SECRET (Authorization: Bearer ...).
+  if (pathname.startsWith('/api/cron/')) return true;
+  // Registrazione walk-in self-service (QR all'ingresso): pubblica solo se richiesto.
+  if (process.env.WALK_IN_PUBLIC === 'true') {
+    return pathname === '/walk-in' || pathname.startsWith('/walk-in/') || pathname === '/api/walk-in';
+  }
+  return false;
+}
+
+function closedResponse(request: NextRequest, pathname: string): NextResponse {
+  if (pathname.startsWith('/api/')) {
+    const methods = PUBLIC_CORS_ROUTES[pathname];
     return NextResponse.json(
-      { error: 'Open Days 2026 conclusi: prenotazioni chiuse.' },
-      { status: 410, headers: CLOSED_HEADERS },
+      { error: CLOSED_MESSAGE },
+      {
+        status: 410,
+        headers: {
+          ...CLOSED_HEADERS,
+          ...(methods ? corsHeaders(request.headers.get('origin'), methods) : {}),
+        },
+      },
     );
   }
   return new NextResponse(CLOSED_HTML, {
@@ -90,21 +117,24 @@ function requireAdmin(request: NextRequest): NextResponse {
 }
 
 export function proxy(request: NextRequest) {
-  const pathname = request.nextUrl.pathname;
+  const rawPath = request.nextUrl.pathname;
+  const pathname = rawPath.length > 1 ? rawPath.replace(/\/+$/, '') || '/' : rawPath;
 
-  if (OPEN_DAYS_CLOSED && !isAdminPath(pathname) && !isPrivacyPath(pathname)) {
-    return closedResponse(pathname);
+  // Preflight CORS delle API pubbliche: mai dietro Basic Auth, mai 410.
+  const corsMethods = PUBLIC_CORS_ROUTES[pathname];
+  if (request.method === 'OPTIONS' && corsMethods) {
+    return new NextResponse(null, {
+      status: 204,
+      headers: corsHeaders(request.headers.get('origin'), corsMethods),
+    });
   }
 
-  if ((pathname === '/open-days' || pathname.startsWith('/open-days/'))
-    && !pathname.startsWith('/open-days/admin')
-    && !pathname.startsWith('/open-days/api/admin')) {
-    const rewritten = request.nextUrl.clone();
-    rewritten.pathname = pathname.slice('/open-days'.length) || '/';
-    return NextResponse.rewrite(rewritten);
-  }
-
+  if (isAdminPath(pathname)) return requireAdmin(request);
   if (isPrivacyPath(pathname)) return NextResponse.next();
+
+  if (!EVENT.openRegistrations) return closedResponse(request, pathname);
+
+  if (isPublicPath(pathname)) return NextResponse.next();
 
   return requireAdmin(request);
 }

@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import QRCode from 'qrcode';
 import { query } from '@/lib/db';
+import { EVENT, checkinUrl as buildCheckinUrl } from '@/lib/event';
 import ScreenshotButton from './screenshot-button';
 import './pass.css';
 
@@ -19,9 +20,6 @@ type PassRow = {
   start_time: string;
 };
 
-function staffBaseUrl() {
-  return (process.env.STAFF_BASE_URL || 'https://damai-rouge.vercel.app').replace(/\/$/, '');
-}
 
 function formatDate(dateStr: string) {
   try {
@@ -43,15 +41,16 @@ export default async function WalkInPassPage({
   params: Promise<{ token: string }>;
 }) {
   const { token } = await params;
+  if (!/^[0-9a-f-]{36}$/i.test(token)) notFound();
 
   const res = await query<PassRow>(
     `SELECT r.id::text, r.registration_code, r.first_name, r.last_name, r.phone, r.email,
        r.companions, r.registration_mode, s.event_date::text, s.start_time::text
      FROM registrations r
      JOIN open_day_slots s ON s.id = r.slot_id
-     WHERE r.qr_token = $1::uuid
+     WHERE r.qr_token = $1::uuid AND r.edition = $2
      LIMIT 1`,
-    [token]
+    [token, EVENT.edition]
   );
 
   if (!res.rowCount || !res.rows[0]) {
@@ -59,7 +58,7 @@ export default async function WalkInPassPage({
   }
 
   const r = res.rows[0];
-  const checkinUrl = `${staffBaseUrl()}/admin/checkin/${token}`;
+  const checkinUrl = buildCheckinUrl(token);
 
   // Generazione QR per visualizzazione su schermo
   const qrDataUrl = await QRCode.toDataURL(checkinUrl, {
@@ -82,8 +81,8 @@ export default async function WalkInPassPage({
             width={160}
             height={46}
           />
-          <div className="pass-edition">✦ Open Days 2026 ✦</div>
-          <div className="pass-title">La Dolce Vita</div>
+          <div className="pass-edition">✦ 12 e 13 dicembre 2026 ✦</div>
+          <div className="pass-title">Christmas Village</div>
         </header>
 
         {/* Banner Screenshot Evidente per chi è sotto il sole o in movimento */}
@@ -92,7 +91,7 @@ export default async function WalkInPassPage({
           <strong>IMPORTANTE — SALVA IL TUO PASS</strong>
           <p>
             Fai subito uno <u>screenshot</u> di questa schermata.
-            Ti servirà all’uscita per ricevere il tuo <strong>cadeau esclusivo</strong>.
+            Ti servirà all’ingresso e all’uscita del <strong>Christmas Village</strong>.
           </p>
         </section>
 
@@ -141,8 +140,8 @@ export default async function WalkInPassPage({
 
         {/* Istruzioni e rassicurazioni */}
         <section className="pass-instructions">
-          <strong>All’uscita mostra questo QR allo staff</strong>
-          per registrare la tua visita e ritirare il cadeau DAMAI.
+          <strong>Mostra questo QR allo staff all’ingresso e all’uscita</strong>
+          per registrare la tua visita al Christmas Village.
           <div className="pass-support-note">
             Hai difficoltà o hai perso il QR? Comunica il tuo cognome (<strong>{r.last_name}</strong>)
             o il tuo recapito allo staff della reception.
