@@ -140,7 +140,7 @@ export default function RegistrationForm() {
         </div>
         <div className="field full checks">
           <label className="check"><input name="privacyConsent" type="checkbox" required /> <span>Ho letto l’<a href="/privacy" target="_blank" rel="noopener noreferrer">informativa privacy</a> e acconsento al trattamento dei dati necessario alla gestione della registrazione e della visita. *</span></label>
-          <label className="check"><input name="marketingConsent" type="checkbox" /> <span>Sì, voglio ricevere in anteprima le date 2027, gli eventi Damai e le condizioni riservate a chi ha partecipato al Christmas Village. (facoltativo)</span></label>
+          <label className="check"><input name="marketingConsent" type="checkbox" /> <span>Sì, voglio ricevere in anteprima le date 2027, gli eventi Damai e le condizioni riservate a chi ha partecipato al Christmas Village, anche tramite annunci personalizzati su Facebook e Instagram. (facoltativo)</span></label>
         </div>
         {error && <div className="field full error" role="alert">{error}</div>}
         <div className="field full"><button className="submit" disabled={loading || slotsLoading || Boolean(slotsError)}>{loading ? 'Registrazione in corso…' : slotsLoading ? 'Caricamento orari…' : 'Invia la registrazione'}</button></div>

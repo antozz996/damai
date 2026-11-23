@@ -121,7 +121,7 @@ const quickLinks = [
 ];
 
 export default async function AdminPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
-  const edition = resolveEdition((await searchParams).ed);
+  const edition = resolveEdition((await searchParams)?.ed);
   // Edizioni concluse: dashboard d'archivio in sola lettura, con gli stati di quell'edizione.
   if (!edition.current) return <ArchiveDashboard edition={edition} />;
 
