@@ -13,3 +13,30 @@
 .admin-resend-feedback.success{background:#eaf5ed;color:#16552c}
 .admin-resend-feedback.error{background:#f9e8e5;color:#923b2e}
 .admin-resend-hint{font-size:12px;color:#746d64;line-height:1.5;margin:8px 0 0}
+
+/* Selettore di edizione + archivio in sola lettura */
+.edition-bar{margin:0 0 26px}
+.edition-switch{display:inline-flex;gap:4px;padding:4px;background:#eeeae4;border:1px solid #ddd7ce;border-radius:999px;max-width:100%}
+.edition-pill{display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:10px 18px;border-radius:999px;color:#746d64;text-decoration:none;font-size:11px;letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;transition:background .18s ease,color .18s ease}
+.edition-pill small{font-size:10px;letter-spacing:.08em;opacity:.75}
+.edition-pill:hover{color:#2f261e}
+.edition-pill.active{background:#0a3157;color:#fff;box-shadow:0 6px 14px rgba(10,49,87,.18)}
+.edition-archive-banner{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px;margin-top:14px;padding:13px 16px;background:#fbf0d5;border:1px solid #e6cf9a;border-left:3px solid #a87423;color:#7a5210;font-size:12px;line-height:1.5}
+.edition-archive-banner strong{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#5f3f0b;white-space:nowrap}
+.edition-badge{display:inline-block;padding:4px 9px;border-radius:999px;background:#0a3157;color:#fff;font-size:10px;letter-spacing:.08em;text-transform:uppercase;vertical-align:middle}
+.edition-badge.archive{background:#fbf0d5;color:#7a5210;border:1px solid #e6cf9a}
+.lead-bars{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.lead-bar{background:#fff;border:1px solid #ddd7ce;padding:14px 16px}
+.lead-bar b{display:block;font-size:24px;font-weight:400;color:#2f261e}
+.lead-bar span{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#746d64}
+.lead-bar i{display:block;height:3px;margin-top:10px;background:#eeeae4}
+.lead-bar i em{display:block;height:100%;background:#a87423}
+.table tr.day-total td{background:#faf8f5;font-weight:bold;color:#2f261e}
+.admin-readonly-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 24px;margin:0}
+.admin-readonly-grid div{padding:12px 0;border-top:1px solid #ece7df;min-width:0}
+.admin-readonly-grid div.full{grid-column:1/-1}
+.admin-readonly-grid dt{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#694932;margin-bottom:5px}
+.admin-readonly-grid dd{margin:0;font-size:15px;color:#2f261e;overflow-wrap:anywhere;white-space:pre-line}
+.admin-side-card .lead-form{margin-top:8px}
+@media(max-width:1050px){.lead-bars{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:650px){.edition-switch{display:flex;width:100%;border-radius:18px}.edition-pill{flex:1 1 0;min-width:0;padding:10px 8px;white-space:normal;text-align:center;flex-direction:column;gap:0;border-radius:14px;font-size:10px;line-height:1.3}.admin-readonly-grid{grid-template-columns:1fr}.admin-readonly-grid div.full{grid-column:auto}}

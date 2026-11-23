@@ -1,5 +1,7 @@
 import { query } from '@/lib/db';
-import { EVENT } from '@/lib/event';
+import { EVENT, resolveEdition } from '@/lib/event';
+import ArchiveDashboard from './archive-dashboard';
+import EditionBar from './edition-bar';
 
 export const dynamic = 'force-dynamic';
 
@@ -111,7 +113,11 @@ const quickLinks = [
   },
 ];
 
-export default async function AdminPage() {
+export default async function AdminPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  const edition = resolveEdition((await searchParams).ed);
+  // Edizioni concluse: dashboard d'archivio in sola lettura, con gli stati di quell'edizione.
+  if (!edition.current) return <ArchiveDashboard edition={edition} />;
+
 // Capienza: contano le registrazioni attive (registrate + già entrate).
   const statsResult = await query<Stats>(`
     SELECT
@@ -179,6 +185,8 @@ const s = statsResult.rows[0] ?? {
             </a>
           </div>
         </header>
+
+        <EditionBar edition={edition} path="/admin" />
 
         <section className="stats admin-stats" aria-label="Riepilogo registrazioni">
           <div className="stat"><b>{s.active}</b><span>Registrazioni</span></div>

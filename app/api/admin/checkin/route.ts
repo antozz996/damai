@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { transaction } from '@/lib/db';
 import { EVENT } from '@/lib/event';
+import { ARCHIVE_READ_ONLY_MESSAGE, isArchivedRegistration } from '@/lib/edition-guard';
 import { queueThankYou } from '@/lib/communications';
 
 /**
@@ -35,6 +36,9 @@ export async function POST(req: NextRequest) {
     return { ok: true as const };
   });
 
-  if (!result.ok) return new NextResponse(result.message, { status: result.code });
+  if (!result.ok) {
+    if (result.code === 404 && await isArchivedRegistration('qr_token', token)) return new NextResponse(ARCHIVE_READ_ONLY_MESSAGE, { status: 409 });
+    return new NextResponse(result.message, { status: result.code });
+  }
   return NextResponse.redirect(new URL(`/admin/checkin/${token}?ok=entry`, req.url), 303);
 }

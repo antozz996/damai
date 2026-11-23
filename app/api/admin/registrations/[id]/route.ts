@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { transaction } from '@/lib/db';
 import { EVENT } from '@/lib/event';
+import { ARCHIVE_READ_ONLY_MESSAGE, isArchivedRegistration } from '@/lib/edition-guard';
 import { isIsoDate } from '@/lib/validation';
 
 const editSchema = z.object({
@@ -34,6 +35,9 @@ function redirectToEdit(req: NextRequest, id: string, key: string) {
 export async function POST(req: NextRequest, { params }: RouteContext) {
   const { id } = await params;
   if (!/^[0-9a-f-]{36}$/i.test(id)) return new NextResponse('ID non valido', { status: 400 });
+
+  // Edizioni in archivio: nessuna modifica, annullamento o eliminazione.
+  if (await isArchivedRegistration('id', id)) return new NextResponse(ARCHIVE_READ_ONLY_MESSAGE, { status: 409 });
 
   const form = await req.formData();
   const intent = String(form.get('intent') || 'save');
@@ -153,6 +157,7 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
 export async function DELETE(req: NextRequest, { params }: RouteContext) {
   const { id } = await params;
   if (!/^[0-9a-f-]{36}$/i.test(id)) return NextResponse.json({ error: 'ID non valido' }, { status: 400 });
+  if (await isArchivedRegistration('id', id)) return NextResponse.json({ error: ARCHIVE_READ_ONLY_MESSAGE }, { status: 409 });
   try {
     await transaction(async (client) => {
       const result = await client.query(`DELETE FROM registrations WHERE id=$1 AND edition=$2 AND status='cancelled' RETURNING id`, [id, EVENT.edition]);

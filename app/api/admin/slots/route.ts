@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { transaction } from '@/lib/db';
 import { EVENT } from '@/lib/event';
+import { ARCHIVE_READ_ONLY_MESSAGE, isArchivedSlot } from '@/lib/edition-guard';
 
 export async function POST(req: NextRequest) {
   const form = await req.formData();
@@ -10,6 +11,8 @@ export async function POST(req: NextRequest) {
   if (!/^[0-9a-f-]{36}$/i.test(id) || !Number.isInteger(capacity) || capacity < 1 || capacity > 500) {
     return new NextResponse('Dati non validi', { status: 400 });
   }
+
+  if (await isArchivedSlot(id)) return new NextResponse(ARCHIVE_READ_ONLY_MESSAGE, { status: 409 });
 
   try {
     await transaction(async client => {

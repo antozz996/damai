@@ -1,5 +1,6 @@
 import { query } from '@/lib/db';
-import { EVENT } from '@/lib/event';
+import { edHref, resolveEdition, statusLabel } from '@/lib/event';
+import EditionBar from '../../edition-bar';
 
 export const dynamic = 'force-dynamic';
 
@@ -41,13 +42,6 @@ type Slot = {
   reservedPeople: number;
 };
 
-const STATUS_LABELS: Record<string, string> = {
-  registered: 'Registrato',
-  checked_in: 'Entrato',
-  exited: 'Entrato',
-  no_show: 'No show',
-};
-
 function dateLabel(value: string) {
   return new Intl.DateTimeFormat('it-IT', {
     weekday: 'long',
@@ -57,7 +51,7 @@ function dateLabel(value: string) {
   }).format(new Date(`${value}T12:00:00`));
 }
 
-function buildSlots(rows: SlotGuestRow[]) {
+function buildSlots(rows: SlotGuestRow[], activeStatuses: string[]) {
   const slots = new Map<string, Slot>();
   for (const row of rows) {
     const current = slots.get(row.slot_id) ?? {
@@ -83,14 +77,16 @@ function buildSlots(rows: SlotGuestRow[]) {
         status: row.status,
       });
       current.reservedPeople += 1 + companions;
-      if (row.status === 'registered' || row.status === 'checked_in') current.activePeople += 1 + companions;
+      if (activeStatuses.includes(row.status)) current.activePeople += 1 + companions;
     }
     slots.set(row.slot_id, current);
   }
   return [...slots.values()];
 }
 
-export default async function SlotOverviewPage() {
+export default async function SlotOverviewPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  const edition = resolveEdition((await searchParams).ed);
+  const archive = !edition.current;
   const result = await query<SlotGuestRow>(`
     SELECT
       s.id::text AS slot_id,
@@ -112,9 +108,9 @@ export default async function SlotOverviewPage() {
       AND r.status <> 'cancelled'
     WHERE s.edition = $1
     ORDER BY s.event_date, s.start_time, r.last_name, r.first_name
-  `, [EVENT.edition]);
+  `, [edition.id]);
 
-  const slots = buildSlots(result.rows);
+  const slots = buildSlots(result.rows, edition.activeStatuses);
   const days = [...new Set(slots.map((slot) => slot.eventDate))];
 
   return (
@@ -122,17 +118,19 @@ export default async function SlotOverviewPage() {
       <div className="admin-inner slot-overview-page">
         <header className="admin-header compact">
           <div>
-            <div className="eyebrow">DAMAI · Controllo presenze</div>
+            <div className="eyebrow">DAMAI · Controllo presenze{archive ? ' · Archivio' : ''}</div>
             <h1>Prenotati per slot</h1>
             <p className="admin-intro">Apri una fascia per vedere subito chi è prenotato. I record annullati o di test non entrano nei conteggi.</p>
           </div>
-          <div className="admin-header-actions"><a className="admin-public-link" href="/admin">← Dashboard</a></div>
+          <div className="admin-header-actions"><a className="admin-public-link" href={edHref('/admin', edition)}>← Dashboard</a></div>
         </header>
 
+        <EditionBar edition={edition} path="/admin/slots/overview" />
+
         <div className="slot-overview-legend">
-          <span><i className="legend-dot active" /> Persone che occupano la capienza</span>
+          <span><i className="legend-dot active" /> {archive ? 'Persone registrate o presenti (no show esclusi)' : 'Persone che occupano la capienza'}</span>
           <span><i className="legend-dot neutral" /> Prenotazioni storiche dello slot</span>
-          <a className="admin-text-link" href="/admin/slots">Modifica capienze →</a>
+          <a className="admin-text-link" href={edHref('/admin/slots', edition)}>{archive ? 'Vedi le fasce →' : 'Modifica capienze →'}</a>
         </div>
 
         {days.map((day) => {
@@ -143,7 +141,7 @@ export default async function SlotOverviewPage() {
             <section className="slot-day-section" key={day} aria-labelledby={`day-${day}`}>
               <div className="slot-day-heading">
                 <div>
-                  <div className="eyebrow">{EVENT.shortName}</div>
+                  <div className="eyebrow">{edition.shortName}</div>
                   <h2 id={`day-${day}`}>{dateLabel(day)}</h2>
                 </div>
                 <div className="slot-day-totals"><strong>{dayPeople}</strong> persone attive · <strong>{dayReservations}</strong> prenotazioni</div>
@@ -158,15 +156,15 @@ export default async function SlotOverviewPage() {
                         <span className="slot-summary-time">{slot.startTime.slice(0, 5)}</span>
                         <span className="slot-summary-count"><strong>{slot.activePeople}/{slot.capacity}</strong><small>persone attive</small></span>
                         <span className="slot-summary-reservations">{slot.guests.length} {slot.guests.length === 1 ? 'prenotazione' : 'prenotazioni'}</span>
-                        <span className={`slot-summary-state ${isFull ? 'full' : !slot.isActive ? 'inactive' : ''}`}>{!slot.isActive ? 'Non attivo' : isFull ? 'Completo' : 'Disponibile'}</span>
+                        <span className={`slot-summary-state ${isFull ? 'full' : !slot.isActive ? 'inactive' : ''}`}>{!slot.isActive ? 'Non attivo' : isFull ? 'Completo' : archive ? 'Concluso' : 'Disponibile'}</span>
                       </summary>
                       <div className="slot-progress"><span style={{ width: `${percentage}%` }} /></div>
                       <div className="slot-guests">
                         {!slot.guests.length && <p className="slot-empty">Nessuna prenotazione in questa fascia.</p>}
                         {slot.guests.map((guest) => (
-                          <a className="slot-guest" href={`/admin/registrations/${guest.id}`} key={guest.id}>
+                          <a className="slot-guest" href={edHref(`/admin/registrations/${guest.id}`, edition)} key={guest.id}>
                             <span><strong>{guest.firstName} {guest.lastName}</strong><small>{guest.email} · {1 + guest.companions} {1 + guest.companions === 1 ? 'persona' : 'persone'}{guest.children > 0 ? ` · ${guest.children} ${guest.children === 1 ? 'bambino' : 'bambini'}` : ''}</small></span>
-                            <span className={`pill ${guest.status === 'checked_in' || guest.status === 'exited' ? 'ok' : ''}`}>{STATUS_LABELS[guest.status] || guest.status}</span>
+                            <span className={`pill ${guest.status === 'checked_in' || guest.status === 'exited' ? 'ok' : ''}`}>{statusLabel(guest.status, edition)}</span>
                           </a>
                         ))}
                       </div>
@@ -179,7 +177,7 @@ export default async function SlotOverviewPage() {
         })}
 
         {!slots.length && <div className="admin-footnote">Nessuna fascia configurata.</div>}
-        <div className="toolbar"><a href="/admin">← Dashboard</a><a href="/admin/registrations">Gestisci registrazioni</a><a href="/admin/checkin">Scanner QR</a></div>
+        <div className="toolbar"><a href={edHref('/admin', edition)}>← Dashboard</a><a href={edHref('/admin/registrations', edition)}>{archive ? 'Registrazioni' : 'Gestisci registrazioni'}</a>{!archive && <a href="/admin/checkin">Scanner QR</a>}</div>
       </div>
     </main>
   );

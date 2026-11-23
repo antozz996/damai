@@ -7,10 +7,20 @@ type Props = {
   status: string;
   registrationCode: string;
   qrToken: string;
+  /** Id dell'edizione archiviata: mostra solo il link alla scheda (nessuna azione di scrittura). */
+  archiveEdition?: string;
 };
 
-export default function RegistrationActions({ id, status, registrationCode, qrToken }: Props) {
+export default function RegistrationActions({ id, status, registrationCode, qrToken, archiveEdition }: Props) {
   const [busy, setBusy] = useState(false);
+
+  if (archiveEdition) {
+    return (
+      <div className="row-actions">
+        <a className="admin-action-link" href={`/admin/registrations/${id}?ed=${encodeURIComponent(archiveEdition)}`}>Apri scheda</a>
+      </div>
+    );
+  }
 
   function confirmSubmit(event: FormEvent<HTMLFormElement>, message: string) {
     if (!window.confirm(message)) {

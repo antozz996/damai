@@ -58,3 +58,100 @@ export function checkinUrl(qrToken: string): string {
 }
 
 export const PLACEHOLDER_EMAIL_PATTERN = '%@no-email.damai.local';
+
+/* ------------------------------------------------------------------ *
+ * Edizioni consultabili dall'area staff (selettore `?ed=<id>`).
+ * È l'unica allowlist: ogni parametro `ed` va risolto con
+ * `resolveEdition`/`findEdition` e passato all'SQL solo come parametro $n.
+ * ------------------------------------------------------------------ */
+export type Edition = {
+  /** Valore di open_day_slots.edition / registrations.edition. */
+  id: string;
+  name: string;
+  shortName: string;
+  /** Etichetta della pillola nel selettore. */
+  tabLabel: string;
+  dates: string[];
+  datesLabel: string;
+  /** true = edizione in corso (scrivibile); false = archivio in sola lettura. */
+  current: boolean;
+  /** Stati che occupano posti / contano come "persone" per l'edizione. */
+  activeStatuses: string[];
+};
+
+export const EDITIONS: Edition[] = [
+  {
+    id: EVENT.edition,
+    name: EVENT.name,
+    shortName: EVENT.shortName,
+    tabLabel: 'Christmas Village 2026',
+    dates: EVENT.dates,
+    datesLabel: EVENT.datesLabel,
+    current: true,
+    activeStatuses: ['registered', 'checked_in'],
+  },
+  {
+    id: 'open-days-2026',
+    name: 'La Dolce Vita · Open Days 2026',
+    shortName: 'La Dolce Vita',
+    tabLabel: 'La Dolce Vita 2026',
+    dates: ['2026-10-30', '2026-10-31', '2026-11-01'],
+    datesLabel: 'venerdì 30, sabato 31 ottobre e domenica 1 novembre 2026',
+    current: false,
+    activeStatuses: ['registered', 'checked_in', 'exited'],
+  },
+].filter((edition, index, all) => all.findIndex((other) => other.id === edition.id) === index);
+
+export const CURRENT_EDITION: Edition = EDITIONS[0];
+export const EDITION_IDS: string[] = EDITIONS.map((edition) => edition.id);
+
+function firstValue(value: unknown): string {
+  if (Array.isArray(value)) return typeof value[0] === 'string' ? value[0] : '';
+  return typeof value === 'string' ? value : '';
+}
+
+/** Edizione dell'allowlist con quell'id, altrimenti undefined (mai valori liberi). */
+export function findEdition(value: unknown): Edition | undefined {
+  const id = firstValue(value);
+  return EDITIONS.find((edition) => edition.id === id);
+}
+
+/** Come findEdition, ma con ripiego sull'edizione corrente (parametro assente o non valido). */
+export function resolveEdition(value: unknown): Edition {
+  return findEdition(value) ?? CURRENT_EDITION;
+}
+
+/** Aggiunge `ed=<id>` a un link interno dell'admin quando si è in archivio. */
+export function edHref(path: string, edition: Edition): string {
+  if (edition.current) return path;
+  return `${path}${path.includes('?') ? '&' : '?'}ed=${encodeURIComponent(edition.id)}`;
+}
+
+const STATUS_LABELS: Record<string, string> = {
+  registered: 'Registrato',
+  checked_in: 'Entrato',
+  exited: 'Entrato',
+  cancelled: 'Annullato',
+  no_show: 'No show',
+};
+
+/** Etichetta dello stato: in archivio 'exited' è distinto ("Uscito"). */
+export function statusLabel(status: string, edition: Edition = CURRENT_EDITION): string {
+  if (!edition.current && status === 'exited') return 'Uscito';
+  return STATUS_LABELS[status] || status;
+}
+
+export const LEAD_STAGES = [
+  ['new', 'Nuovo'],
+  ['hot', 'Hot lead'],
+  ['potential', 'Potenziale'],
+  ['evaluating', 'In valutazione'],
+  ['follow_up', 'Follow up'],
+  ['long_term', 'Lungo termine'],
+  ['won', 'Convertito'],
+  ['lost', 'Perso'],
+] as const;
+
+export function leadStageLabel(stage: string): string {
+  return LEAD_STAGES.find(([value]) => value === stage)?.[1] ?? stage;
+}

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { transaction } from '@/lib/db';
 import { EVENT } from '@/lib/event';
+import { ARCHIVE_READ_ONLY_MESSAGE, isArchivedRegistration } from '@/lib/edition-guard';
 import { sendEmail, type Guest } from '@/lib/notifications';
 
 export const runtime = 'nodejs';
@@ -95,7 +96,10 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
     });
   } catch (error) {
     if (error instanceof Error) {
-      if (error.message === 'NOT_FOUND') return NextResponse.json({ error: 'Prenotazione non trovata.' }, { status: 404 });
+      if (error.message === 'NOT_FOUND') {
+        if (await isArchivedRegistration('id', id)) return NextResponse.json({ error: ARCHIVE_READ_ONLY_MESSAGE }, { status: 409 });
+        return NextResponse.json({ error: 'Prenotazione non trovata.' }, { status: 404 });
+      }
       if (error.message === 'CANCELLED') return NextResponse.json({ error: 'La prenotazione è annullata: non è possibile inviare una conferma.' }, { status: 409 });
       if (error.message === 'INVALID_EMAIL') return NextResponse.json({ error: 'Correggi e salva un indirizzo email valido prima del reinvio.' }, { status: 400 });
       if (error.message === 'TOO_SOON') return NextResponse.json({ error: 'È già stato richiesto un reinvio: riprova tra 30 secondi.' }, { status: 429 });

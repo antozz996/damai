@@ -1,27 +1,9 @@
 import { query } from '@/lib/db';
-import { EVENT } from '@/lib/event';
+import { edHref, LEAD_STAGES, resolveEdition, statusLabel } from '@/lib/event';
+import EditionBar from '../edition-bar';
 import RegistrationActions from './actions';
 
 export const dynamic = 'force-dynamic';
-
-const LEAD_STAGES = [
-  ['new', 'Nuovo'],
-  ['hot', 'Hot lead'],
-  ['potential', 'Potenziale'],
-  ['evaluating', 'In valutazione'],
-  ['follow_up', 'Follow up'],
-  ['long_term', 'Lungo termine'],
-  ['won', 'Convertito'],
-  ['lost', 'Perso'],
-] as const;
-
-const STATUS_LABELS: Record<string, string> = {
-  registered: 'Registrato',
-  checked_in: 'Entrato',
-  exited: 'Entrato',
-  cancelled: 'Annullato',
-  no_show: 'No show',
-};
 
 type RegistrationRow = {
   id: string;
@@ -54,18 +36,20 @@ function first(value: string | string[] | undefined) {
 
 export default async function RegistrationsPage({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams;
+  const edition = resolveEdition(params.ed);
+  const archive = !edition.current;
   const q = first(params.q).trim();
   const status = ['active', 'cancelled', 'all'].includes(first(params.status)) ? first(params.status) : 'active';
-  const notice = first(params.saved) === '1' ? 'Modifica salvata correttamente.' : first(params.cancelled) === '1' ? 'Registrazione annullata: lo slot è stato liberato.' : first(params.deleted) === '1' ? 'Record eliminato definitivamente.' : '';
+  const notice = first(params.lead) === '1' ? 'Stato del lead aggiornato.' : first(params.saved) === '1' ? 'Modifica salvata correttamente.' : first(params.cancelled) === '1' ? 'Registrazione annullata: lo slot è stato liberato.' : first(params.deleted) === '1' ? 'Record eliminato definitivamente.' : '';
 
   const countsResult = await query<{ active: string; cancelled: string; people: string }>(`
     SELECT
       COUNT(*) FILTER (WHERE status <> 'cancelled')::text AS active,
       COUNT(*) FILTER (WHERE status = 'cancelled')::text AS cancelled,
-      COALESCE(SUM(1 + companions) FILTER (WHERE status IN ('registered','checked_in')), 0)::text AS people
+      COALESCE(SUM(1 + companions) FILTER (WHERE status = ANY($2::text[])), 0)::text AS people
     FROM registrations
     WHERE edition = $1
-  `, [EVENT.edition]);
+  `, [edition.id, edition.activeStatuses]);
 
   const rows = await query<RegistrationRow>(`
     SELECT r.id::text, r.registration_code, r.qr_token::text, r.first_name, r.last_name,
@@ -80,7 +64,7 @@ export default async function RegistrationsPage({ searchParams }: { searchParams
       AND r.edition = $3
     ORDER BY r.created_at DESC
     LIMIT 500
-  `, [q, status, EVENT.edition]);
+  `, [q, status, edition.id]);
 
   const counts = countsResult.rows[0] ?? { active: '0', cancelled: '0', people: '0' };
 
@@ -89,22 +73,27 @@ export default async function RegistrationsPage({ searchParams }: { searchParams
       <div className="admin-inner">
         <header className="admin-header compact">
           <div>
-            <div className="eyebrow">DAMAI · Gestione ospiti</div>
+            <div className="eyebrow">DAMAI · Gestione ospiti{archive ? ' · Archivio' : ''}</div>
             <h1>Registrazioni</h1>
-            <p className="admin-intro">Modifica i dati, sposta una fascia o archivia i record creati durante i test.</p>
+            <p className="admin-intro">{archive
+              ? `${edition.name}: consulta le schede e aggiorna lo stato dei lead. Gli altri dati non sono modificabili.`
+              : 'Modifica i dati, sposta una fascia o archivia i record creati durante i test.'}</p>
           </div>
-          <div className="admin-header-actions"><a className="admin-public-link" href="/admin">← Dashboard</a></div>
+          <div className="admin-header-actions"><a className="admin-public-link" href={edHref('/admin', edition)}>← Dashboard</a></div>
         </header>
+
+        <EditionBar edition={edition} path="/admin/registrations" />
 
         {notice && <div className="success admin-notice" role="status">{notice}</div>}
 
         <div className="admin-mini-stats">
           <span><b>{counts.active}</b> attive</span>
-          <span><b>{counts.people}</b> persone prenotate</span>
+          <span><b>{counts.people}</b> {archive ? 'persone' : 'persone prenotate'}</span>
           <span><b>{counts.cancelled}</b> annullate / test</span>
         </div>
 
         <form className="admin-filters" method="get">
+          {archive && <input type="hidden" name="ed" value={edition.id} />}
           <label>Ricerca
             <input name="q" defaultValue={q} placeholder="Nome, email, telefono o codice" />
           </label>
@@ -116,7 +105,8 @@ export default async function RegistrationsPage({ searchParams }: { searchParams
             </select>
           </label>
           <button type="submit">Cerca</button>
-          <a className="admin-reset" href="/admin/registrations">Azzera filtri</a>
+          <a className="admin-reset" href={edHref('/admin/registrations', edition)}>Azzera filtri</a>
+          {archive && <a className="admin-reset" href={edHref('/api/admin/export', edition)}>Esporta CSV</a>}
         </form>
 
         <div className="table-wrap">
@@ -130,17 +120,18 @@ export default async function RegistrationsPage({ searchParams }: { searchParams
                   <td>{r.phone}<br /><small>{r.email}</small></td>
                   <td>{r.event_date}<br />{r.start_time.slice(0, 5)}</td>
                   <td>{1 + r.companions} {1 + r.companions === 1 ? 'persona' : 'persone'}{r.children > 0 ? <><br /><small>{r.children} {r.children === 1 ? 'bambino' : 'bambini'}</small></> : null}</td>
-                  <td><span className={`pill ${r.status === 'checked_in' || r.status === 'exited' ? 'ok' : r.status === 'cancelled' ? 'cancelled' : ''}`}>{STATUS_LABELS[r.status] || r.status}</span></td>
+                  <td><span className={`pill ${r.status === 'checked_in' || r.status === 'exited' ? 'ok' : r.status === 'cancelled' ? 'cancelled' : ''}`}>{statusLabel(r.status, edition)}</span></td>
                   <td>
                     <form method="post" action="/api/admin/lead-stage" className="lead-form">
                       <input type="hidden" name="code" value={r.registration_code} />
+                      {archive && <input type="hidden" name="ed" value={edition.id} />}
                       <select name="stage" defaultValue={r.lead_stage} aria-label={`Lead ${r.registration_code}`}>
                         {LEAD_STAGES.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
                       </select>
                       <button type="submit">Salva</button>
                     </form>
                   </td>
-                  <td><RegistrationActions id={r.id} status={r.status} registrationCode={r.registration_code} qrToken={r.qr_token} /></td>
+                  <td><RegistrationActions id={r.id} status={r.status} registrationCode={r.registration_code} qrToken={r.qr_token} archiveEdition={archive ? edition.id : undefined} /></td>
                 </tr>
               ))}
               {!rows.rowCount && <tr><td colSpan={8}>Nessuna registrazione per questa vista.</td></tr>}
@@ -149,7 +140,9 @@ export default async function RegistrationsPage({ searchParams }: { searchParams
         </div>
 
         <div className="admin-footnote">
-          <strong>Come funziona l’eliminazione:</strong> “Annulla” è la scelta normale per un test: libera la capienza e conserva lo storico. “Elimina definitivamente” compare solo per i record già annullati.
+          {archive
+            ? <><strong>Archivio in sola lettura:</strong> le registrazioni di questa edizione non si possono modificare, annullare o eliminare. Puoi solo aggiornare lo stato del lead e scaricare il CSV.</>
+            : <><strong>Come funziona l’eliminazione:</strong> “Annulla” è la scelta normale per un test: libera la capienza e conserva lo storico. “Elimina definitivamente” compare solo per i record già annullati.</>}
         </div>
       </div>
     </main>
