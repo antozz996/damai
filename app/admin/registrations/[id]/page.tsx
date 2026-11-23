@@ -19,6 +19,8 @@ type Registration = {
   guest_count: number | null;
   companions: number;
   children: number;
+  existing_booking_venue: string | null;
+  existing_booking_date: string | null;
   slot_id: string;
   source: string | null;
   notes: string | null;
@@ -36,8 +38,8 @@ type Slot = { id: string; event_date: string; start_time: string; capacity: numb
 
 const STATUS_LABELS: Record<string, string> = {
   registered: 'Registrato',
-  checked_in: 'Presente',
-  exited: 'Uscito',
+  checked_in: 'Entrato',
+  exited: 'Entrato',
   cancelled: 'Annullato',
   no_show: 'No show',
 };
@@ -50,7 +52,8 @@ export default async function RegistrationEditPage({ params, searchParams }: { p
   const registrationResult = await query<Registration>(`
     SELECT r.id::text, r.registration_code, r.qr_token::text, r.first_name, r.last_name,
       r.phone, r.email, r.event_type, r.planned_event_date::text, r.guest_count,
-      r.companions, r.children, r.slot_id::text, r.source, r.notes, r.privacy_consent,
+      r.companions, r.children, r.existing_booking_venue, r.existing_booking_date::text,
+      r.slot_id::text, r.source, r.notes, r.privacy_consent,
       r.marketing_consent, r.status, r.lead_stage, s.event_date::text,
       s.start_time::text, r.created_at::text, r.updated_at::text
     FROM registrations r JOIN open_day_slots s ON s.id = r.slot_id
@@ -75,7 +78,7 @@ export default async function RegistrationEditPage({ params, searchParams }: { p
         <header className="admin-header compact">
           <div>
             <div className="eyebrow">DAMAI · Scheda ospite</div>
-            <h1>{r.first_name} {r.last_name}</h1>
+            <h1>{r.first_name} {r.last_name}{r.existing_booking_venue ? <> <span className="pill ok" style={{ fontSize: 13, verticalAlign: 'middle' }}>Cliente</span></> : null}</h1>
             <p className="admin-intro">{r.registration_code} · creato il {new Date(r.created_at).toLocaleString('it-IT')}</p>
           </div>
           <RegistrationActions id={r.id} status={r.status} registrationCode={r.registration_code} qrToken={r.qr_token} />
@@ -123,6 +126,7 @@ export default async function RegistrationEditPage({ params, searchParams }: { p
             <h2>{STATUS_LABELS[r.status] || r.status}</h2>
             <p><strong>Slot:</strong><br />{r.event_date} · {r.start_time.slice(0, 5)}</p>
             <p><strong>Gruppo:</strong><br />{1 + r.companions} {1 + r.companions === 1 ? 'persona' : 'persone'}{r.children > 0 ? ` · di cui ${r.children} ${r.children === 1 ? 'bambino' : 'bambini'}` : ''}</p>
+            <p><strong>Evento già prenotato:</strong><br />{r.existing_booking_venue ? `${r.existing_booking_venue}${r.existing_booking_date ? ` · ${r.existing_booking_date}` : ''}` : 'No'}</p>
             <p><strong>Lead:</strong><br />{r.lead_stage}</p>
             <p><strong>QR token:</strong><br /><code>{r.qr_token}</code></p>
             <a className="admin-text-link" href={`/admin/checkin/${r.qr_token}`}>Apri scheda scanner →</a>

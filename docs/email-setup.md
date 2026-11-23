@@ -9,7 +9,7 @@ Il form registra l'ospite e genera un codice univoco. Quando le variabili email 
 
 Il QR apre la scheda di check-in dello staff. La pagina è protetta dalle credenziali dell'area amministrativa; le ragazze devono usare il link dello scanner `/admin/checkin`.
 
-I tre template transazionali del Damai Christmas Village (conferma, promemoria, ringraziamento dopo l'uscita) usano il marchio ufficiale `public/damai/logo-email.png` (DAMAI Event Garden, estratto dal PDF ufficiale). Il ringraziamento post-uscita usa la frase: “Grazie per aver condiviso con noi la magia del Natale”.
+I tre template transazionali del Damai Christmas Village (conferma con QR, promemoria, ringraziamento il giorno dopo la visita) sono in stile bordeaux e oro, con layout a tabelle da 600px e font Georgia. Usano le immagini `public/email/dcv-monogramma.png` e `public/email/dcv-logo.png`, servite da `${PUBLIC_BASE_URL}/email/…` (i file statici sono sempre pubblici, anche a registrazioni chiuse). Anteprima senza invio: `/api/admin/test-email?type=registration_confirmation` (oppure `reminder_24h`, `thank_you`), raggiungibile dalla pagina `/admin/emails`.
 
 ## 1. Verifica il dominio in Resend
 
@@ -42,7 +42,7 @@ Il dominio contenuto in `EMAIL_FROM` deve essere quello verificato in Resend. Do
 2. Controlla in Resend **Emails** che la richiesta sia stata accettata e poi consegnata.
 3. Verifica che l'email mostri il QR e contenga l'allegato `DAMAI-QR.png`.
 4. Sul telefono dello staff apri `/admin/checkin`, attiva la fotocamera e inquadra il QR.
-5. Nella scheda del cliente premi **Conferma ingresso** e verifica lo stato nella dashboard.
+5. Nella scheda del cliente premi **Registra ingresso** e verifica lo stato nella dashboard.
 
 Se Resend non è configurato o risponde con un errore temporaneo, la registrazione resta valida: la comunicazione rimane in coda e il cron `/api/cron/communications` la ritenta automaticamente, fino a tre tentativi. Controlla il dettaglio dell'errore nei log della funzione Vercel e in Resend.
 

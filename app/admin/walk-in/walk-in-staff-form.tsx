@@ -271,7 +271,7 @@ export default function WalkInStaffForm() {
               <span>Conferma ingresso subito (Check-in IN)</span>
             </label>
             <p style={{ margin: '6px 0 0 34px', fontSize: '12px', color: '#695e52', lineHeight: 1.4 }}>
-              Se attivo, l&apos;ospite viene registrato direttamente come &ldquo;Presente&rdquo; e sarai reindirizzato alla schermata check-in.
+              Se attivo, l&apos;ospite viene registrato direttamente come &ldquo;Entrato&rdquo; e sarai reindirizzato alla schermata check-in.
             </p>
           </div>
 
@@ -286,7 +286,7 @@ export default function WalkInStaffForm() {
         <div className="admin-walkin-card">
           <h2>🔍 Cerca Ospite / Recupero Pass</h2>
           <p style={{ fontSize: '13px', color: '#695e52', margin: '0 0 14px', lineHeight: 1.45 }}>
-            Cerca per telefono, cognome o codice per aprire subito la scheda check-in o uscita.
+            Cerca per telefono, cognome o codice per aprire subito la scheda di check-in.
           </p>
 
           <form onSubmit={handleSearch} className="staff-search-box">

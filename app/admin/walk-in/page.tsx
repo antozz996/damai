@@ -9,9 +9,7 @@ export const dynamic = 'force-dynamic';
 type WalkInStats = {
   total: string;
   present: string;
-  exited: string;
   children: string;
-  cadeau: string;
 };
 
 type WalkInRow = {
@@ -22,7 +20,6 @@ type WalkInRow = {
   phone: string;
   companions: number;
   status: string;
-  cadeau_delivered_at: string | null;
   qr_token: string;
   arrived_at: string;
 };
@@ -32,16 +29,14 @@ export default async function AdminWalkInPage() {
     SELECT
       COUNT(*) FILTER (WHERE registration_mode = 'walk_in' AND status <> 'cancelled')::text AS total,
       COUNT(*) FILTER (WHERE registration_mode = 'walk_in' AND status = 'checked_in')::text AS present,
-      COUNT(*) FILTER (WHERE registration_mode = 'walk_in' AND status = 'exited')::text AS exited,
-      COALESCE(SUM(children) FILTER (WHERE registration_mode = 'walk_in' AND status <> 'cancelled'), 0)::text AS children,
-      COUNT(*) FILTER (WHERE registration_mode = 'walk_in' AND cadeau_delivered_at IS NOT NULL)::text AS cadeau
+      COALESCE(SUM(children) FILTER (WHERE registration_mode = 'walk_in' AND status <> 'cancelled'), 0)::text AS children
     FROM registrations
     WHERE edition = $1
   `, [EVENT.edition]);
 
   const listRes = await query<WalkInRow>(`
     SELECT id::text, registration_code, first_name, last_name, phone, companions,
-      status, cadeau_delivered_at::text, qr_token::text,
+      status, qr_token::text,
       COALESCE(arrived_at, created_at)::text AS arrived_at
     FROM registrations
     WHERE registration_mode = 'walk_in' AND edition = $1
@@ -49,7 +44,7 @@ export default async function AdminWalkInPage() {
     LIMIT 15
   `, [EVENT.edition]);
 
-  const stats = statsRes.rows[0] ?? { total: '0', present: '0', exited: '0', children: '0', cadeau: '0' };
+  const stats = statsRes.rows[0] ?? { total: '0', present: '0', children: '0' };
 
   return (
     <main className="admin-walkin-shell">
@@ -74,22 +69,12 @@ export default async function AdminWalkInPage() {
           </div>
           <div className="admin-walkin-stat-card">
             <b style={{ color: '#315d46' }}>{stats.present}</b>
-            <span>Presenti Ora</span>
-          </div>
-          <div className="admin-walkin-stat-card">
-            <b>{stats.exited}</b>
-            <span>Usciti</span>
+            <span>Ingressi registrati</span>
           </div>
           <div className="admin-walkin-stat-card">
             <b style={{ color: '#a87423' }}>{stats.children}</b>
             <span>Bambini</span>
           </div>
-          {EVENT.features.gift && (
-            <div className="admin-walkin-stat-card">
-              <b style={{ color: '#a87423' }}>{stats.cadeau}</b>
-              <span>Cadeau Consegnati</span>
-            </div>
-          )}
         </section>
 
         {/* Form Staff & Ricerca */}
@@ -114,7 +99,7 @@ export default async function AdminWalkInPage() {
                     <div className="walkin-mobile-header">
                       <span className="walkin-mobile-code">{row.registration_code}</span>
                       <span className={`pill ${row.status === 'checked_in' || row.status === 'exited' ? 'ok' : ''}`}>
-                        {row.status === 'checked_in' ? 'PRESENTE' : row.status === 'exited' ? 'USCITO' : row.status}
+                        {row.status === 'checked_in' || row.status === 'exited' ? 'ENTRATO' : row.status === 'registered' ? 'DA ARRIVARE' : row.status}
                       </span>
                     </div>
 
@@ -127,12 +112,6 @@ export default async function AdminWalkInPage() {
                       </div>
                       <div style={{ marginTop: '4px', color: '#666', fontSize: '12px' }}>
                         Arrivo: {new Date(row.arrived_at).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}
-                        {EVENT.features.gift && (
-                          <>
-                            {' · '}
-                            Cadeau: {row.cadeau_delivered_at ? <span style={{ color: '#315d46', fontWeight: 600 }}>✓ Consegnato</span> : 'Non ancora'}
-                          </>
-                        )}
                       </div>
                     </div>
 
@@ -155,7 +134,6 @@ export default async function AdminWalkInPage() {
                         <th>Gruppo</th>
                         <th>Arrivo</th>
                         <th>Stato</th>
-                        {EVENT.features.gift && <th>Cadeau</th>}
                         <th>Azione</th>
                       </tr>
                     </thead>
@@ -176,18 +154,9 @@ export default async function AdminWalkInPage() {
                           </td>
                           <td>
                             <span className={`pill ${row.status === 'checked_in' || row.status === 'exited' ? 'ok' : ''}`}>
-                              {row.status === 'checked_in' ? 'PRESENTE' : row.status === 'exited' ? 'USCITO' : row.status}
+                              {row.status === 'checked_in' || row.status === 'exited' ? 'ENTRATO' : row.status === 'registered' ? 'DA ARRIVARE' : row.status}
                             </span>
                           </td>
-                          {EVENT.features.gift && (
-                            <td>
-                              {row.cadeau_delivered_at ? (
-                                <span style={{ color: '#315d46', fontWeight: 600 }}>✓ Consegnato</span>
-                              ) : (
-                                <span style={{ color: '#999' }}>—</span>
-                              )}
-                            </td>
-                          )}
                           <td>
                             <Link
                               href={`/admin/checkin/${row.qr_token}`}

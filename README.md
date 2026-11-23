@@ -14,13 +14,14 @@ Lo stesso sistema ha gestito gli Open Days 2026: quei dati restano nel database 
 - Anti-duplicato per email/telefono, limitato all'edizione corrente
 - Codice registrazione (`N26-…`) e QR personale univoco
 - Biglietto pubblico con QR su `/ticket/[token]`
-- Check-in e check-out dello staff tramite scansione del QR
-- Dashboard amministrativa protetta: ingressi, uscite, presenti ora, bambini
+- Check-in (solo ingresso) dello staff tramite scansione del QR: uscita e cadeau non sono previsti, ogni fascia dura 30 minuti
+- Dashboard amministrativa protetta: registrazioni, ingressi effettuati, persone entrate/da arrivare per fascia, bambini, posti residui
+- Domanda "Hai già un evento prenotato presso le nostre strutture?" (Playa Luna, Culto, Damai + data) con badge "Cliente" in admin
 - Modifica della capienza/attivazione di ogni fascia oraria
 - Qualificazione lead per chi indica un evento da organizzare
-- Esportazione CSV completa (con colonna `bambini`)
+- Esportazione CSV completa (con colonne `bambini`, `struttura_prenotata`, `data_evento_prenotato`)
 - Tracking UTM e provenienza
-- Coda comunicazioni email + WhatsApp: conferma immediata con QR, promemoria, ringraziamento dopo l'uscita
+- Coda comunicazioni email + WhatsApp: conferma immediata con QR, promemoria, ringraziamento il giorno dopo la visita
 - CORS per origini autorizzate, rate limit best-effort e campo honeypot sulla registrazione
 - Informativa privacy dedicata
 
@@ -48,7 +49,6 @@ Copia `.env.example` e configura:
 | `REGISTRATIONS_OPEN` | `true` per aprire le rotte pubbliche; con qualsiasi altro valore rispondono 410 |
 | `CORS_ALLOWED_ORIGINS` | Origini autorizzate, separate da virgola |
 | `WALK_IN_PUBLIC` | `true` per rendere pubblica la registrazione walk-in self-service (`/walk-in`) |
-| `FEATURE_GIFT` | `true` per riattivare il passo "cadeau" all'uscita (default disattivato) |
 | `ADMIN_USER`, `ADMIN_PASSWORD` | Credenziali Basic Auth dell'area staff |
 | `CRON_SECRET` | Segreto del cron comunicazioni |
 | Resend / WhatsApp | Facoltativi, vedi `.env.example` |
@@ -71,7 +71,7 @@ Sempre protette da Basic Auth: `/admin`, `/admin/slots`, `/admin/registrations`,
 
 ### Contratto API pubblico
 
-`GET /api/slots` → `200 { "edition": "natale-2026", "slots": [{ "id", "eventDate": "2026-12-12", "startTime": "16:00:00", "capacity": 60, "used": 12, "remaining": 48 }] }`
+`GET /api/slots` → `200 { "edition": "natale-2026", "slots": [{ "id", "eventDate": "2026-12-12", "startTime": "16:00:00", "capacity": 100, "used": 12, "remaining": 88 }] }`
 
 `POST /api/register` (JSON):
 
@@ -87,6 +87,8 @@ Sempre protette da Basic Auth: `/admin`, `/admin/slots`, `/admin/registrations`,
 | `eventType` | no | default `Solo Christmas Village` |
 | `plannedEventDate` | no | `AAAA-MM-GG` |
 | `guestCount` | no | 1-1000 |
+| `existingBookingVenue` | no | evento già prenotato presso una struttura: esattamente `Playa Luna`, `Culto` o `Damai`; `""`/`null` = nessuno |
+| `existingBookingDate` | no | `AAAA-MM-GG`; **obbligatoria se** `existingBookingVenue` è valorizzato, ignorata altrimenti |
 | `source`, `notes` | no | |
 | `marketingConsent` | no | default `false` |
 | `utmSource`, `utmMedium`, `utmCampaign` | no | |
@@ -99,7 +101,7 @@ Errori, sempre nella forma `{ "error": "messaggio in italiano" }`: `400` dati no
 ## Database
 
 - Installazione pulita: `db/schema.sql`.
-- Database esistente (quello degli Open Days): applicare `db/migrations/20261123_edition_natale.sql`, idempotente. Aggiunge `edition` a fasce e registrazioni, `children` alle registrazioni e crea le 22 fasce dell'edizione `natale-2026` (12 e 13 dicembre, ogni 30 minuti dalle 16:00 alle 21:00, 60 persone ciascuna).
+- Database esistente (quello degli Open Days): applicare `db/migrations/20261123_edition_natale.sql`, idempotente. Aggiunge `edition` a fasce e registrazioni, `children`, `existing_booking_venue` e `existing_booking_date` alle registrazioni e crea le 22 fasce dell'edizione `natale-2026` (12 e 13 dicembre, ogni 30 minuti dalle 16:00 alle 21:00, 100 persone ciascuna, 30 minuti di permanenza). Se era già stata applicata con capienza 60, rieseguirla porta le fasce a 100.
 
 La capienza di ogni fascia è modificabile dall'area staff.
 
@@ -109,7 +111,7 @@ Il sistema mette in coda:
 
 1. conferma di registrazione con QR (inviata subito);
 2. promemoria prima dell'evento;
-3. ringraziamento il giorno successivo, dopo che lo staff ha registrato l'uscita.
+3. ringraziamento alle 9:00 del giorno successivo alla fascia, accodato quando lo staff registra l'ingresso (una sola volta).
 
 Email e WhatsApp sono indipendenti: se un provider non è configurato, la comunicazione resta in coda e non blocca la registrazione. Promemoria e ringraziamento partono dal cron giornaliero definito in `vercel.json`, che funziona solo con `REGISTRATIONS_OPEN=true`.
 

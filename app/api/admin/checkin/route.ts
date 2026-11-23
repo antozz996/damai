@@ -1,61 +1,40 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { transaction } from '@/lib/db';
 import { EVENT } from '@/lib/event';
+import { queueThankYou } from '@/lib/communications';
 
-type Action = 'entry' | 'exit' | 'gift';
-
+/**
+ * Check-in dello staff: registra solo l'INGRESSO (scansione del QR).
+ * Uscita e cadeau non sono previsti: la permanenza è di 30 minuti per fascia.
+ */
 export async function POST(req: NextRequest) {
   const form = await req.formData();
   const token = String(form.get('token') || '');
-  const action = (String(form.get('action') || 'entry') as Action);
+  const action = String(form.get('action') || 'entry');
   if (!/^[0-9a-f-]{36}$/i.test(token)) return new NextResponse('Token non valido', { status: 400 });
-  if (!['entry','exit','gift'].includes(action)) return new NextResponse('Azione non valida', { status: 400 });
-  // Il cadeau non è previsto in questa edizione: il passo "gift" è disattivato.
-  if (action === 'gift' && !EVENT.features.gift) {
-    return new NextResponse('La consegna del cadeau non è prevista per questo evento', { status: 400 });
+  if (action === 'exit' || action === 'gift') {
+    return new NextResponse('Uscita e cadeau non sono previsti per questo evento: si registra solo l’ingresso', { status: 400 });
   }
+  if (action !== 'entry') return new NextResponse('Azione non valida', { status: 400 });
 
   const result = await transaction(async client => {
-    const found = await client.query<{id:string; status:string; cadeau_delivered_at:string|null; slot_id:string}>(
-      `SELECT id::text, status, cadeau_delivered_at::text, slot_id::text
+    const found = await client.query<{ id: string; status: string }>(
+      `SELECT id::text, status
        FROM registrations WHERE qr_token=$1::uuid AND edition=$2 FOR UPDATE`, [token, EVENT.edition]
     );
-    if (!found.rowCount) return { ok:false as const, code:404, message:'Registrazione non trovata' };
+    if (!found.rowCount) return { ok: false as const, code: 404, message: 'Registrazione non trovata' };
     const row = found.rows[0];
+    if (row.status === 'cancelled') return { ok: false as const, code: 409, message: 'Registrazione annullata' };
 
-    if (action === 'entry') {
-      if (row.status === 'cancelled') return { ok:false as const, code:409, message:'Registrazione annullata' };
-      if (row.status === 'registered') {
-        await client.query(`UPDATE registrations SET status='checked_in', checked_in_at=now(), updated_at=now() WHERE id=$1`, [row.id]);
-        await client.query(`INSERT INTO registration_events (registration_id,event_type,metadata) VALUES ($1,'checked_in','{}'::jsonb)`, [row.id]);
-      }
-      return { ok:true as const, next:'entry' as const };
+    // Scansione ripetuta: nessun effetto (stato, eventi e ringraziamento restano unici).
+    if (row.status === 'registered') {
+      await client.query(`UPDATE registrations SET status='checked_in', checked_in_at=now(), updated_at=now() WHERE id=$1`, [row.id]);
+      await client.query(`INSERT INTO registration_events (registration_id,event_type,metadata) VALUES ($1,'checked_in','{}'::jsonb)`, [row.id]);
+      await queueThankYou(client, row.id);
     }
-
-    if (action === 'exit') {
-      if (row.status === 'registered') return { ok:false as const, code:409, message:'L’ospite non risulta ancora entrato' };
-      if (row.status === 'cancelled') return { ok:false as const, code:409, message:'Registrazione annullata' };
-      if (row.status === 'checked_in') {
-        await client.query(`UPDATE registrations SET status='exited', checked_out_at=now(), updated_at=now() WHERE id=$1`, [row.id]);
-        await client.query(`INSERT INTO registration_events (registration_id,event_type,metadata) VALUES ($1,'checked_out','{}'::jsonb)`, [row.id]);
-        // Mail di ringraziamento: in coda per le 09:00 del giorno successivo all'evento.
-        await client.query(`
-          INSERT INTO communications (registration_id, channel, message_type, status, scheduled_for)
-          SELECT $1, 'email', 'exit_thank_you', 'queued',
-            ((s.event_date + time '09:00') AT TIME ZONE 'Europe/Rome') + interval '1 day'
-          FROM open_day_slots s WHERE s.id=$2
-        `, [row.id, row.slot_id]);
-      }
-      return { ok:true as const, next:'exit' as const };
-    }
-
-    if (row.status !== 'exited') return { ok:false as const, code:409, message:'Registra prima l’uscita dell’ospite' };
-    if (row.cadeau_delivered_at) return { ok:false as const, code:409, message:'Cadeau già consegnato' };
-    await client.query(`UPDATE registrations SET cadeau_delivered_at=now(), updated_at=now() WHERE id=$1`, [row.id]);
-    await client.query(`INSERT INTO registration_events (registration_id,event_type,metadata) VALUES ($1,'cadeau_delivered','{}'::jsonb)`, [row.id]);
-    return { ok:true as const, next:'gift' as const };
+    return { ok: true as const };
   });
 
   if (!result.ok) return new NextResponse(result.message, { status: result.code });
-  return NextResponse.redirect(new URL(`/admin/checkin/${token}?ok=${result.next}`, req.url), 303);
+  return NextResponse.redirect(new URL(`/admin/checkin/${token}?ok=entry`, req.url), 303);
 }

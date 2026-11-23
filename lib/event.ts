@@ -15,6 +15,11 @@ export const EVENT = {
   dates: ['2026-12-12', '2026-12-13'],
   datesLabel: 'sabato 12 e domenica 13 dicembre 2026',
   hoursLabel: 'dalle 16:00 alle 21:30',
+  /** Capienza predefinita di ogni fascia (modificabile dallo staff fascia per fascia). */
+  slotCapacity: 100,
+  /** Permanenza prevista all'interno per ogni fascia. */
+  visitMinutes: 30,
+  visitLabel: '30 minuti di visita',
   lastEntryLabel: 'ultimo ingresso alle 21:00',
   venue: 'DAMAI Event Garden',
   address: 'Via Marina di Varcaturo 42, Castel Volturno (CE)',
@@ -22,15 +27,15 @@ export const EVENT = {
   defaultEventType: 'Solo Christmas Village',
   /** Pagina pubblica dell'evento (sito statico): è quella a cui punta il QR del volantino. */
   publicPageUrl: (process.env.PUBLIC_PAGE_URL || 'https://www.damaigarden.it/christmas-village/'),
-  features: {
-    /** Consegna del cadeau all'uscita: disattivata per il Christmas Village. */
-    gift: process.env.FEATURE_GIFT === 'true',
-  },
   /** Registrazioni aperte solo con REGISTRATIONS_OPEN=true (letto a ogni richiesta). */
   get openRegistrations(): boolean {
     return process.env.REGISTRATIONS_OPEN === 'true';
   },
 };
+
+/** Strutture presso cui l'ospite può avere già un evento prenotato. */
+export const BOOKING_VENUES = ['Playa Luna', 'Culto', 'Damai'] as const;
+export type BookingVenue = (typeof BOOKING_VENUES)[number];
 
 const FALLBACK_BASE_URL = 'https://damai-rouge.vercel.app';
 

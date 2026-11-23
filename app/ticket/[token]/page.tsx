@@ -38,8 +38,8 @@ export default async function TicketPage({ params }: { params: Promise<{ token: 
   return (
     <main className="ticket-shell">
       <article className="ticket">
-        <div className="brand">DAMAI</div>
-        <div className="brand-sub" style={{marginBottom:0}}>{EVENT.shortName} · Ingresso gratuito</div>
+        <img className="ticket-logo" src="/email/dcv-logo.png" width={280} height={103} alt={EVENT.name} />
+        <div className="brand-sub" style={{marginBottom:0}}>12 e 13 dicembre 2026 · Ingresso gratuito</div>
         {cancelled ? (
           <>
             <h1>Registrazione annullata.</h1>
@@ -48,17 +48,17 @@ export default async function TicketPage({ params }: { params: Promise<{ token: 
         ) : (
           <>
             <h1>Il tuo posto è confermato.</h1>
-            <p>Presenta questo QR all’ingresso: è il tuo biglietto personale per il {EVENT.name}.</p>
+            <p>Mostra questo QR all’ingresso: è il tuo biglietto personale per il {EVENT.name}.</p>
             <img className="qr" src={qr} alt="QR code personale DAMAI" />
             <div className="code">{r.registration_code}</div>
             <div className="ticket-meta">
               <div><strong>Ospite</strong>{r.first_name} {r.last_name}</div>
               <div><strong>Persone</strong>{partySize}{r.children > 0 ? ` (di cui ${r.children} ${r.children === 1 ? 'bambino' : 'bambini'})` : ''}</div>
               <div><strong>Giorno</strong>{date}</div>
-              <div><strong>Arrivo</strong>dalle {r.start_time.slice(0,5)}</div>
+              <div><strong>Fascia</strong>{r.start_time.slice(0,5)} · {EVENT.visitLabel}</div>
             </div>
             <p>{EVENT.venue} · {EVENT.address}</p>
-            <p className="info">L’orario indicato è la fascia di arrivo, non la durata della visita: il villaggio resta aperto fino alle 21:30. Salva questa pagina o fai uno screenshot del QR. Dopo l’uscita riceverai una mail di ringraziamento.</p>
+            <p className="info">Ogni fascia prevede {EVENT.visitMinutes} minuti di permanenza all’interno del villaggio: ti chiediamo di presentarti in orario. Salva questa pagina o fai uno screenshot del QR.</p>
           </>
         )}
       </article>

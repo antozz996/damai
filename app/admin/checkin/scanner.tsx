@@ -138,7 +138,7 @@ export default function Scanner() {
           <input id="qr-link" value={manualValue} onChange={event => setManualValue(event.target.value)} placeholder="https://…/admin/checkin/…" autoComplete="off" />
           <button type="submit" className="scanner-secondary">Apri scheda cliente <span>↗</span></button>
         </form>
-        <div className="scanner-help"><strong>Procedura all&apos;ingresso</strong><ol><li>Chiedi al cliente di mostrare il QR ricevuto.</li><li>Inquadralo senza scattare una foto.</li><li>Nella scheda premi “Conferma ingresso”.</li></ol></div>
+        <div className="scanner-help"><strong>Procedura all&apos;ingresso</strong><ol><li>Chiedi al cliente di mostrare il QR ricevuto.</li><li>Inquadralo senza scattare una foto.</li><li>Controlla che la fascia sia quella in corso e premi “Registra ingresso”.</li></ol></div>
         <a className="scanner-dashboard-link" href="/admin">Torna alla dashboard →</a>
       </section>
     </div>

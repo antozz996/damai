@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS open_day_slots (
   edition text NOT NULL DEFAULT 'open-days-2026',
   event_date date NOT NULL,
   start_time time NOT NULL,
-  capacity integer NOT NULL DEFAULT 60 CHECK (capacity > 0),
+  capacity integer NOT NULL DEFAULT 100 CHECK (capacity > 0),
   is_active boolean NOT NULL DEFAULT true,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now(),
@@ -27,6 +27,8 @@ CREATE TABLE IF NOT EXISTS registrations (
   guest_count integer CHECK (guest_count IS NULL OR guest_count > 0),
   companions integer NOT NULL DEFAULT 0 CHECK (companions >= 0 AND companions <= 10),
   children integer NOT NULL DEFAULT 0 CONSTRAINT registrations_children_check CHECK (children >= 0 AND children <= 10),
+  existing_booking_venue text CONSTRAINT registrations_existing_booking_venue_check CHECK (existing_booking_venue IS NULL OR existing_booking_venue IN ('Playa Luna', 'Culto', 'Damai')),
+  existing_booking_date date,
   slot_id uuid NOT NULL REFERENCES open_day_slots(id),
   source text,
   notes text,
@@ -82,9 +84,10 @@ CREATE TABLE IF NOT EXISTS communications (
 CREATE INDEX IF NOT EXISTS communications_due_idx ON communications(status, scheduled_for);
 
 -- Fasce del Damai Christmas Village: 12 e 13 dicembre 2026, ogni 30 minuti
--- dalle 16:00 alle 21:00 comprese (ultimo ingresso 21:00), 60 persone per fascia.
+-- dalle 16:00 alle 21:00 comprese (ultimo ingresso 21:00), 100 persone per fascia
+-- (30 minuti di permanenza per fascia).
 INSERT INTO open_day_slots (edition, event_date, start_time, capacity)
-SELECT 'natale-2026', d, t::time, 60
+SELECT 'natale-2026', d, t::time, 100
 FROM unnest(ARRAY['2026-12-12'::date, '2026-12-13'::date]) AS d
 CROSS JOIN generate_series(
   timestamp '2026-12-12 16:00', timestamp '2026-12-12 21:00', interval '30 minutes'

@@ -1,6 +1,7 @@
 'use client';
 
 import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { BOOKING_VENUES } from '@/lib/event';
 
 type Slot = {
   id: string;
@@ -16,6 +17,7 @@ const EVENT_TYPES = ['Matrimonio','18° compleanno','Comunione','Battesimo','Lau
 export default function RegistrationForm() {
   const [slots, setSlots] = useState<Slot[]>([]);
   const [slotId, setSlotId] = useState('');
+  const [bookingVenue, setBookingVenue] = useState('');
   const [loading, setLoading] = useState(false);
   const [slotsLoading, setSlotsLoading] = useState(true);
   const [slotsError, setSlotsError] = useState('');
@@ -52,7 +54,7 @@ export default function RegistrationForm() {
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError('');
-    if (!slotId) return setError('Seleziona prima giorno e orario di arrivo.');
+    if (!slotId) return setError('Seleziona prima giorno e fascia oraria.');
     setLoading(true);
 
     const fd = new FormData(e.currentTarget);
@@ -69,6 +71,8 @@ export default function RegistrationForm() {
       eventType: fd.get('eventType') || undefined,
       plannedEventDate: fd.get('plannedEventDate'),
       guestCount: fd.get('guestCount') ? Number(fd.get('guestCount')) : undefined,
+      existingBookingVenue: bookingVenue || undefined,
+      existingBookingDate: bookingVenue ? fd.get('existingBookingDate') || undefined : undefined,
       companions: Number(fd.get('companions') || 0),
       children: Number(fd.get('children') || 0),
       website: fd.get('website') || undefined,
@@ -114,13 +118,15 @@ export default function RegistrationForm() {
         <div className="field"><label htmlFor="eventType">Stai pensando a un evento al Damai? (facoltativo)</label><select id="eventType" name="eventType" defaultValue=""><option value="">No, vengo per il Christmas Village</option>{EVENT_TYPES.map(x => <option key={x}>{x}</option>)}</select></div>
         <div className="field"><label htmlFor="plannedEventDate">Data prevista dell'evento</label><input id="plannedEventDate" name="plannedEventDate" type="date" /></div>
         <div className="field"><label htmlFor="guestCount">Numero indicativo ospiti</label><input id="guestCount" name="guestCount" type="number" min="1" max="1000" placeholder="Es. 120" /></div>
+        <div className="field"><label htmlFor="existingBookingVenue">Hai già un evento prenotato presso le nostre strutture?</label><select id="existingBookingVenue" name="existingBookingVenue" value={bookingVenue} onChange={event => setBookingVenue(event.target.value)}><option value="">No</option>{BOOKING_VENUES.map(venue => <option key={venue} value={venue}>Sì, presso {venue}</option>)}</select></div>
+        {bookingVenue && <div className="field full"><label htmlFor="existingBookingDate">Data dell&apos;evento prenotato *</label><input id="existingBookingDate" name="existingBookingDate" type="date" required /></div>}
         <div className="field"><label htmlFor="companions">Accompagnatori (bambini compresi)</label><select id="companions" name="companions" defaultValue="0">{Array.from({length:11},(_,i)=><option value={i} key={i}>{i}</option>)}</select></div>
         <div className="field"><label htmlFor="children">Di cui bambini</label><select id="children" name="children" defaultValue="0">{Array.from({length:11},(_,i)=><option value={i} key={i}>{i}</option>)}</select></div>
         <div className="field full"><label htmlFor="source">Come hai conosciuto l'evento?</label><select id="source" name="source" defaultValue=""><option value="">Seleziona</option><option>Volantino</option><option>Instagram</option><option>Facebook</option><option>Google</option><option>Passaparola</option><option>Già cliente / già visitato DAMAI</option><option>Altro</option></select></div>
         <div className="field full"><label htmlFor="notes">Note o esigenze particolari</label><textarea id="notes" name="notes" placeholder="Facoltativo" /></div>
         <div className="field full slots-area">
-          <label>Giorno e fascia oraria di arrivo *</label>
-          <p className="info">L'orario selezionato è l'orario di arrivo, non la durata della visita. La disponibilità viene aggiornata in tempo reale.</p>
+          <label>Giorno e fascia oraria *</label>
+          <p className="info">Ogni fascia prevede 30 minuti di permanenza all&apos;interno del villaggio: scegli il tuo orario e presentati puntuale. La disponibilità viene aggiornata in tempo reale.</p>
           {slotsLoading && <div className="slots-message"><strong>Caricamento disponibilità…</strong>Stiamo verificando le fasce libere.</div>}
           {!slotsLoading && slotsError && <div className="slots-message"><strong>Disponibilità temporaneamente non caricata</strong>{slotsError}<br/><button type="button" className="retry" onClick={() => void loadSlots()}>Riprova ora</button></div>}
           {Object.entries(byDay).map(([day, daySlots]) => (

@@ -3,6 +3,7 @@ import { randomBytes } from 'crypto';
 import { PoolClient } from 'pg';
 import { Guest } from '@/lib/notifications';
 import { EVENT } from '@/lib/event';
+import { isIsoDate } from '@/lib/validation';
 
 export type SlotRow = {
   id: string;
@@ -39,7 +40,7 @@ export const walkInSchema = z.object({
   // Solo informativo: quanti accompagnatori sono bambini.
   children: z.coerce.number().int().min(0).max(10).default(0),
   email: z.string().trim().email('Indirizzo email non valido').max(160).optional().or(z.literal('')),
-  plannedEventDate: z.string().trim().optional().or(z.literal('')),
+  plannedEventDate: z.string().trim().refine(value => value === '' || isIsoDate(value), 'Data dell’evento non valida').optional(),
   guestCount: z.coerce.number().int().min(1).max(1000).optional(),
   notes: z.string().trim().max(1000).optional(),
   privacyConsent: z.literal(true),

@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { query, transaction } from '@/lib/db';
 import { walkInSchema, createWalkIn } from '@/lib/walk-in';
 import { sendEmail } from '@/lib/notifications';
+import { queueThankYou } from '@/lib/communications';
 
 export const dynamic = 'force-dynamic';
 
@@ -37,6 +38,7 @@ export async function POST(req: NextRequest) {
            VALUES ($1, 'checked_in', '{"by":"desk_staff_walkin"}'::jsonb)`,
           [res.registrationId]
         );
+        await queueThankYou(client, res.registrationId);
       }
 
       return res;

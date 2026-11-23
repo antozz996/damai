@@ -43,8 +43,8 @@ type Slot = {
 
 const STATUS_LABELS: Record<string, string> = {
   registered: 'Registrato',
-  checked_in: 'Presente',
-  exited: 'Uscito',
+  checked_in: 'Entrato',
+  exited: 'Entrato',
   no_show: 'No show',
 };
 

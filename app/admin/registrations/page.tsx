@@ -17,8 +17,8 @@ const LEAD_STAGES = [
 
 const STATUS_LABELS: Record<string, string> = {
   registered: 'Registrato',
-  checked_in: 'Presente',
-  exited: 'Uscito',
+  checked_in: 'Entrato',
+  exited: 'Entrato',
   cancelled: 'Annullato',
   no_show: 'No show',
 };
@@ -36,6 +36,8 @@ type RegistrationRow = {
   guest_count: number | null;
   companions: number;
   children: number;
+  existing_booking_venue: string | null;
+  existing_booking_date: string | null;
   source: string | null;
   status: string;
   lead_stage: string;
@@ -68,7 +70,8 @@ export default async function RegistrationsPage({ searchParams }: { searchParams
   const rows = await query<RegistrationRow>(`
     SELECT r.id::text, r.registration_code, r.qr_token::text, r.first_name, r.last_name,
       r.phone, r.email, r.event_type, r.planned_event_date::text, r.guest_count,
-      r.companions, r.children, r.source, r.status, r.lead_stage, s.event_date::text,
+      r.companions, r.children, r.existing_booking_venue, r.existing_booking_date::text,
+      r.source, r.status, r.lead_stage, s.event_date::text,
       s.start_time::text, r.created_at::text
     FROM registrations r
     JOIN open_day_slots s ON s.id = r.slot_id
@@ -123,7 +126,7 @@ export default async function RegistrationsPage({ searchParams }: { searchParams
               {rows.rows.map((r) => (
                 <tr key={r.id}>
                   <td><strong>{r.registration_code}</strong><br /><small>{r.event_type}</small></td>
-                  <td><strong>{r.first_name} {r.last_name}</strong><br /><small>{r.source || 'Fonte non indicata'}</small></td>
+                  <td><strong>{r.first_name} {r.last_name}</strong>{r.existing_booking_venue ? <> <span className="pill ok">Cliente</span></> : null}<br /><small>{r.source || 'Fonte non indicata'}</small>{r.existing_booking_venue ? <><br /><small>Evento prenotato: {r.existing_booking_venue}{r.existing_booking_date ? ` · ${r.existing_booking_date}` : ''}</small></> : null}</td>
                   <td>{r.phone}<br /><small>{r.email}</small></td>
                   <td>{r.event_date}<br />{r.start_time.slice(0, 5)}</td>
                   <td>{1 + r.companions} {1 + r.companions === 1 ? 'persona' : 'persone'}{r.children > 0 ? <><br /><small>{r.children} {r.children === 1 ? 'bambino' : 'bambini'}</small></> : null}</td>

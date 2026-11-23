@@ -115,23 +115,26 @@ export async function POST(req: NextRequest) {
           registration_code, first_name, last_name, phone, email, event_type,
           planned_event_date, guest_count, companions, slot_id, source, notes,
           privacy_consent, marketing_consent, utm_source, utm_medium, utm_campaign,
-          edition, children
-        ) VALUES ($1,$2,$3,$4,$5,$6,NULLIF($7,'')::date,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)
+          edition, children, existing_booking_venue, existing_booking_date
+        ) VALUES ($1,$2,$3,$4,$5,$6,NULLIF($7,'')::date,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,NULLIF($21,'')::date)
         RETURNING id, qr_token::text
       `, [
         registrationCode, d.firstName, d.lastName, d.phone, d.email.toLowerCase(), d.eventType,
         d.plannedEventDate || '', d.guestCount ?? null, d.companions, d.slotId, d.source ?? null, d.notes ?? null,
         d.privacyConsent, d.marketingConsent, d.utmSource ?? null, d.utmMedium ?? null, d.utmCampaign ?? null,
-        EVENT.edition, d.children
+        EVENT.edition, d.children,
+        // La data ha senso solo insieme alla struttura.
+        d.existingBookingVenue ?? null, d.existingBookingVenue ? (d.existingBookingDate || '') : '',
       ]);
 
       const registrationId = insert.rows[0].id;
       await client.query(
         `INSERT INTO registration_events (registration_id, event_type, metadata) VALUES ($1,'registered',$2::jsonb)`,
-        [registrationId, JSON.stringify({ partySize, children: d.children })]
+        [registrationId, JSON.stringify({ partySize, children: d.children, existingBookingVenue: d.existingBookingVenue ?? null })]
       );
 
       // Conferma immediata + promemoria 24 ore prima (solo se quel momento non è già passato).
+      // Il ringraziamento viene accodato al check-in (vedi lib/communications.ts).
       await client.query(`
         INSERT INTO communications (registration_id, channel, message_type, status, scheduled_for)
         SELECT $1, q.channel, q.message_type, 'queued', q.scheduled_for

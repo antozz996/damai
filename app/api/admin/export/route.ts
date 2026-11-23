@@ -9,8 +9,6 @@ function csvCell(value: unknown) {
 }
 
 export async function GET() {
-  // Frammento SQL statico (nessun input utente): la colonna cadeau compare solo se la funzione è attiva.
-  const giftColumn = EVENT.features.gift ? `r.cadeau_delivered_at::text AS cadeau_consegnato_at,` : '';
   const result = await query<Record<string, unknown>>(`
     SELECT r.registration_code AS codice, r.first_name AS nome, r.last_name AS cognome,
       r.phone AS telefono,
@@ -24,14 +22,14 @@ export async function GET() {
       to_char(s.start_time,'HH24:MI') AS fascia_oraria,
       r.event_type AS tipo_evento,
       r.planned_event_date::text AS data_evento, r.guest_count AS ospiti_evento,
+      r.existing_booking_venue AS struttura_prenotata,
+      r.existing_booking_date::text AS data_evento_prenotato,
       r.source AS provenienza,
       r.status AS stato_ingresso, r.lead_stage AS stato_lead,
       r.marketing_consent AS consenso_marketing,
       r.utm_source, r.utm_medium, r.utm_campaign,
       r.arrived_at::text AS arrivo_walkin_at,
       r.checked_in_at::text AS checkin_at,
-      r.checked_out_at::text AS checkout_at,
-      ${giftColumn}
       r.created_at::text AS registrato_at
     FROM registrations r
     JOIN open_day_slots s ON s.id=r.slot_id

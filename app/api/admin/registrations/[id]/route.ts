@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { transaction } from '@/lib/db';
 import { EVENT } from '@/lib/event';
+import { isIsoDate } from '@/lib/validation';
 
 const editSchema = z.object({
   firstName: z.string().trim().min(2).max(80),
@@ -9,7 +10,7 @@ const editSchema = z.object({
   phone: z.string().trim().min(7).max(30),
   email: z.string().trim().email().max(160),
   eventType: z.string().trim().min(2).max(80),
-  plannedEventDate: z.string().trim().max(20),
+  plannedEventDate: z.string().trim().max(20).refine(value => value === '' || isIsoDate(value)),
   guestCount: z.preprocess((value) => value === '' || value === null ? undefined : value, z.coerce.number().int().min(1).max(1000).optional()),
   companions: z.coerce.number().int().min(0).max(10),
   children: z.coerce.number().int().min(0).max(10),
@@ -129,9 +130,12 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
 
       await client.query(`
         UPDATE communications c
-        SET scheduled_for=((s.event_date + s.start_time) AT TIME ZONE 'Europe/Rome') - interval '24 hours'
+        SET scheduled_for=CASE c.message_type
+          WHEN 'thank_you' THEN ((s.event_date + 1 + time '09:00') AT TIME ZONE 'Europe/Rome')
+          ELSE ((s.event_date + s.start_time) AT TIME ZONE 'Europe/Rome') - interval '24 hours'
+        END
         FROM open_day_slots s
-        WHERE c.registration_id=$1 AND c.message_type='reminder_24h' AND c.status='queued' AND s.id=$2
+        WHERE c.registration_id=$1 AND c.message_type IN ('reminder_24h','thank_you') AND c.status='queued' AND s.id=$2
       `, [id, data.slotId]);
       await client.query(`INSERT INTO registration_events (registration_id,event_type,metadata) VALUES ($1,'admin_updated',$2::jsonb)`, [id, JSON.stringify({ source: 'admin', slotId: data.slotId })]);
     });

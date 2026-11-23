@@ -14,10 +14,10 @@ const didoneFallback = localFont({
 function DamaiLogo() {
   return (
     <Image
-      src="/damai/logo-original.svg"
-      alt="DAMAI Event Garden"
-      width={924}
-      height={232}
+      src="/email/dcv-logo.png"
+      alt="Damai Christmas Village"
+      width={560}
+      height={205}
       unoptimized
     />
   );
@@ -50,6 +50,10 @@ export default function HomePage() {
             <strong>Ingresso gratuito con registrazione obbligatoria.</strong>
           </p>
           <p className="ldv-section-note">
+            Ogni fascia oraria prevede <strong>{EVENT.visitMinutes} minuti di permanenza</strong> all’interno del villaggio:
+            scegli il tuo orario e presentati puntuale.
+          </p>
+          <p className="ldv-section-note">
             Ti aspettano Babbo Natale, il laboratorio con la letterina e la foto, bevande tipiche,
             delizie natalizie e i mercatini, mentre esplori la nostra struttura.
           </p>
@@ -62,7 +66,7 @@ export default function HomePage() {
         <div className="ldv-registration-form-shell" id="registrazione-form" tabIndex={-1}>
           <h2 className="ldv-heading" id="registrazione-title" style={{ textAlign: 'center' }}>Registrati ora</h2>
           <p className="ldv-registration-form-intro">
-            Scegli il giorno e la fascia oraria di arrivo: riceverai via email il biglietto con il QR da presentare all’ingresso.
+            Scegli il giorno e la fascia oraria ({EVENT.visitLabel} per fascia): riceverai via email il biglietto con il QR da mostrare all’ingresso.
           </p>
           <RegistrationForm />
         </div>

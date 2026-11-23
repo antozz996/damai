@@ -284,3 +284,11 @@ html:has(.ldv-page) { scroll-behavior: smooth; }
 @media (prefers-reduced-motion: reduce) {
   html:has(.ldv-page) { scroll-behavior: auto; }
 }
+
+/* Christmas Village: pagina interna bordeaux e oro (sovrascrive la palette avorio/blu) */
+.ldv-page{--ldv-bg:#1a0307;--ldv-paper:#fbf1dc;--ldv-ink:#fbf1dc;--ldv-blue:#e6c27a;--ldv-line:rgba(230,194,122,.4);background:#1a0307;color:#fbf1dc}
+.ldv-page .ldv-registration-stage{background:#4b0610}
+.ldv-page .ldv-button,.ldv-page .ldv-skip{color:#1a0307}
+.ldv-page .ldv-button:hover{background:#f0d49a}
+.ldv-page .form-main{--ldv-ink:#2a0a0f;--ldv-blue:#4b0610;--ldv-line:rgba(75,6,16,.28);color:#2a0a0f}
+.ldv-page .form-main .submit:hover:not(:disabled){background:#1a0307}
