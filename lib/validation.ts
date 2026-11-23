@@ -44,6 +44,11 @@ export const registrationSchema = z.object({
   utmSource: optionalText(100),
   utmMedium: optionalText(100),
   utmCampaign: optionalText(120),
+  // Tracciamento (Meta Conversions API): facoltativi. Un valore non valido viene scartato,
+  // non deve mai far fallire la registrazione.
+  fbp: z.preprocess(emptyToUndefined, z.string().trim().max(200).regex(/^fb\.\d+\.\d+\.[A-Za-z0-9_.-]+$/).optional()).catch(undefined),
+  fbc: z.preprocess(emptyToUndefined, z.string().trim().max(600).regex(/^fb\.\d+\.\d+\.[A-Za-z0-9_.-]+$/).optional()).catch(undefined),
+  eventSourceUrl: z.preprocess(emptyToUndefined, z.string().trim().max(600).regex(/^https?:\/\/[^\s<>"']+$/i).optional()).catch(undefined),
 })
   .refine(data => data.children <= data.companions, { path: ['children'], message: CHILDREN_ERROR })
   .refine(data => !data.existingBookingVenue || Boolean(data.existingBookingDate), { path: ['existingBookingDate'], message: BOOKING_DATE_ERROR });

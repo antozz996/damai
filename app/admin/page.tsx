@@ -98,6 +98,13 @@ const quickLinks = [
     tone: 'cream',
   },
   {
+    href: '/admin/campaigns/ldv-natale',
+    eyebrow: 'Comunicazioni',
+    title: 'Invito ospiti La Dolce Vita',
+    text: 'Anteprima, prova e invio (una sola volta) dell’invito al Christmas Village.',
+    tone: 'cream',
+  },
+  {
     href: '/api/admin/export',
     eyebrow: 'Dati',
     title: 'Esporta CSV',

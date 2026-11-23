@@ -52,6 +52,13 @@ Copia `.env.example` e configura:
 | `ADMIN_USER`, `ADMIN_PASSWORD` | Credenziali Basic Auth dell'area staff |
 | `CRON_SECRET` | Segreto del cron comunicazioni |
 | Resend / WhatsApp | Facoltativi, vedi `.env.example` |
+| `UNSUBSCRIBE_SECRET` | Segreto (almeno 16 caratteri) che firma i link di disiscrizione `/unsubscribe`; senza, la campagna email non parte. Non va cambiato dopo un invio |
+| `LDV_CAMPAIGN_ENABLED` | `true` per abilitare il pulsante «Invia a tutti» della campagna La Dolce Vita |
+| `LDV_CAMPAIGN_SUBJECT` | Facoltativo: oggetto dell'email della campagna |
+| `META_PIXEL_ID` | Pixel/dataset Meta (default `1509117827731348`) |
+| `META_CAPI_TOKEN` | Token della Conversions API; vuoto = tracciamento lato server disattivo |
+| `META_TEST_EVENT_CODE` | Facoltativo: codice «Test events» di Gestione eventi |
+| `META_GRAPH_VERSION` | Facoltativo: versione della Graph API (default `v24.0`) |
 
 Nessun segreto deve essere committato nel repository.
 
@@ -65,9 +72,9 @@ Pubbliche solo con `REGISTRATIONS_OPEN=true`:
 - `/` — pagina di registrazione di riserva
 - `/api/cron/communications` — coda comunicazioni (richiede `Authorization: Bearer CRON_SECRET`)
 
-Sempre pubblica: `/privacy`.
+Sempre pubbliche: `/privacy` e `/unsubscribe?t=<token>` (disiscrizione dalle email promozionali, anche a registrazioni chiuse).
 
-Sempre protette da Basic Auth: `/admin`, `/admin/slots`, `/admin/registrations`, `/admin/checkin`, `/admin/walk-in`, `/api/admin/*` (export CSV compreso).
+Sempre protette da Basic Auth: `/admin`, `/admin/slots`, `/admin/registrations`, `/admin/checkin`, `/admin/walk-in`, `/admin/campaigns/ldv-natale`, `/api/admin/*` (export CSV compreso).
 
 ### Contratto API pubblico
 
@@ -92,9 +99,13 @@ Sempre protette da Basic Auth: `/admin`, `/admin/slots`, `/admin/registrations`,
 | `source`, `notes` | no | |
 | `marketingConsent` | no | default `false` |
 | `utmSource`, `utmMedium`, `utmCampaign` | no | |
+| `fbp`, `fbc` | no | valori dei cookie Meta `_fbp` / `_fbc` (`fb.1.<timestamp>.<valore>`, max 200 / 600 caratteri); se non validi vengono ignorati |
+| `eventSourceUrl` | no | indirizzo `http(s)` della pagina da cui parte la registrazione (max 600 caratteri); se assente o non valido si usa `PUBLIC_PAGE_URL` |
 | `website` | no | honeypot: deve restare vuoto |
 
-Risposta `201 { "registrationCode": "N26-1A2B3C4D", "qrToken": "<uuid>", "ticketUrl": "https://…/ticket/<uuid>" }`.
+Risposta `201 { "registrationCode": "N26-1A2B3C4D", "qrToken": "<uuid>", "ticketUrl": "https://…/ticket/<uuid>", "eventId": "reg-N26-1A2B3C4D" }`.
+
+`eventId` va passato al pixel del browser come `eventID` dell'evento `CompleteRegistration` (`fbq('track', 'CompleteRegistration', {...}, { eventID })`): così Meta deduplica l'evento del browser con quello inviato dal server.
 
 Errori, sempre nella forma `{ "error": "messaggio in italiano" }`: `400` dati non validi, `404` fascia non disponibile, `409` fascia completa o registrazione già presente, `410` registrazioni chiuse, `429` troppe richieste, `500`/`503` errore temporaneo.
 
@@ -102,6 +113,8 @@ Errori, sempre nella forma `{ "error": "messaggio in italiano" }`: `400` dati no
 
 - Installazione pulita: `db/schema.sql`.
 - Database esistente (quello degli Open Days): applicare `db/migrations/20261123_edition_natale.sql`, idempotente. Aggiunge `edition` a fasce e registrazioni, `children`, `existing_booking_venue` e `existing_booking_date` alle registrazioni e crea le 22 fasce dell'edizione `natale-2026` (12 e 13 dicembre, ogni 30 minuti dalle 16:00 alle 21:00, 100 persone ciascuna, 30 minuti di permanenza). Se era già stata applicata con capienza 60, rieseguirla porta le fasce a 100.
+
+- Opt-out email e campagne: applicare `db/migrations/20261124_email_opt_out.sql`, idempotente. Crea `email_suppressions` (indirizzi disiscritti, validi per tutte le edizioni) e `campaign_sends` (registro degli invii, una riga per campagna + email). Non modifica registrazioni né fasce.
 
 La capienza di ogni fascia è modificabile dall'area staff.
 
@@ -116,6 +129,26 @@ Il sistema mette in coda:
 Email e WhatsApp sono indipendenti: se un provider non è configurato, la comunicazione resta in coda e non blocca la registrazione. Promemoria e ringraziamento partono dal cron giornaliero definito in `vercel.json`, che funziona solo con `REGISTRATIONS_OPEN=true`.
 
 Per configurare Resend, Vercel e il test dello scanner QR consulta [la guida email](docs/email-setup.md).
+
+## Campagna email per gli ospiti de La Dolce Vita
+
+Invito al Christmas Village per chi si è registrato agli Open Days «La Dolce Vita» (edizione `open-days-2026`), inviato **una sola volta** (art. 130 c. 4 Codice privacy). Non esiste alcun invio automatico: tutto parte dalla pagina protetta `/admin/campaigns/ldv-natale`.
+
+1. Applica la migrazione `20261124_email_opt_out.sql` e imposta `UNSUBSCRIBE_SECRET` (oltre a `RESEND_API_KEY`, `EMAIL_FROM`, `PUBLIC_BASE_URL`).
+2. Apri la pagina: mostra anteprima HTML e testo, i conteggi (email distinte, con e senza annullati, disiscritti, non validi, già registrati al Christmas Village) e l'elenco con indirizzi mascherati.
+3. «Invia email di prova a…» spedisce a un solo indirizzo (oggetto con `[PROVA]`), senza toccare il registro.
+4. Per l'invio reale imposta `LDV_CAMPAIGN_ENABLED=true`, digita `INVIA` e premi «Invia a tutti»: la pagina invia a lotti di 20 finché non resta nessuno.
+
+Destinatari: email distinte (minuscole) dell'edizione, escluse quelle disiscritte e quelle non valide; per impostazione predefinita sono esclusi anche gli indirizzi con sole registrazioni annullate (casella per includerli). Ogni indirizzo ha una riga in `campaign_sends`: chi risulta `sent` non viene mai ripreso, gli errori vengono ritentati al massimo 3 volte. Ogni email contiene il link di disiscrizione e le intestazioni `List-Unsubscribe` / `List-Unsubscribe-Post` (one-click); la disiscrizione finisce in `email_suppressions` e vale per tutte le campagne future.
+
+## Tracciamento lato server (Meta Conversions API)
+
+Disattivo finché `META_CAPI_TOKEN` è vuoto. Con il token:
+
+- `POST /api/register` con `marketingConsent: true` → evento `CompleteRegistration` (`action_source: website`, `event_id` = `eventId` della risposta, `custom_data`: `content_name`, `event_day`, `slot`, `party_size`, `lead_hot`). Con `marketingConsent: false` non viene inviato nulla.
+- Primo ingresso registrato dallo staff, se la registrazione ha il consenso marketing → evento `Attended` (`action_source: physical_store`, `event_id` = `att-<codice>`).
+
+Email, telefono, nome e cognome partono solo come hash SHA-256. L'invio avviene dopo la risposta all'utente, con timeout di 3 secondi, e non può far fallire registrazione o check-in. L'esito è registrato in `registration_events` (`capi_sent` / `capi_failed`, con nome evento e codice HTTP, senza dati personali).
 
 ## Sicurezza
 

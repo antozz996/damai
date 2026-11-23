@@ -1,5 +1,6 @@
 -- Schema per una installazione pulita (include già edizioni, bambini e walk-in).
--- Su un database esistente NON usare questo file: applicare db/migrations/20261123_edition_natale.sql.
+-- Su un database esistente NON usare questo file: applicare db/migrations/20261123_edition_natale.sql
+-- e db/migrations/20261124_email_opt_out.sql.
 
 CREATE TABLE IF NOT EXISTS open_day_slots (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -82,6 +83,29 @@ CREATE TABLE IF NOT EXISTS communications (
   created_at timestamptz NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS communications_due_idx ON communications(status, scheduled_for);
+
+-- Opt-out dalle comunicazioni promozionali: vale per indirizzo, su tutte le edizioni.
+CREATE TABLE IF NOT EXISTS email_suppressions (
+  email text PRIMARY KEY CONSTRAINT email_suppressions_lower_check CHECK (email = lower(email)),
+  source text NOT NULL DEFAULT 'unsubscribe_link',
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+-- Registro degli invii di campagna: una sola riga per (campagna, email).
+CREATE TABLE IF NOT EXISTS campaign_sends (
+  id bigserial PRIMARY KEY,
+  campaign text NOT NULL,
+  email text NOT NULL CONSTRAINT campaign_sends_lower_check CHECK (email = lower(email)),
+  registration_id uuid REFERENCES registrations(id) ON DELETE SET NULL,
+  status text NOT NULL DEFAULT 'sending' CONSTRAINT campaign_sends_status_check CHECK (status IN ('sending','sent','failed')),
+  provider_message_id text,
+  attempts integer NOT NULL DEFAULT 0,
+  last_error text,
+  claimed_at timestamptz NOT NULL DEFAULT now(),
+  sent_at timestamptz,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT campaign_sends_campaign_email_key UNIQUE (campaign, email)
+);
 
 -- Fasce del Damai Christmas Village: 12 e 13 dicembre 2026, ogni 30 minuti
 -- dalle 16:00 alle 21:00 comprese (ultimo ingresso 21:00), 100 persone per fascia

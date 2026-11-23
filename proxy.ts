@@ -6,7 +6,8 @@ import { PUBLIC_CORS_ROUTES, corsHeaders } from '@/lib/cors';
  * Damai Christmas Village (12-13 dicembre 2026).
  *
  * - L'area staff (/admin, /api/admin) è SEMPRE protetta da Basic Auth.
- * - L'informativa privacy è sempre raggiungibile.
+ * - L'informativa privacy e la pagina di disiscrizione dalle email (/unsubscribe)
+ *   sono sempre raggiungibili.
  * - Con REGISTRATIONS_OPEN diverso da 'true' tutte le altre rotte rispondono 410 Gone:
  *   nessun nuovo dato personale viene raccolto.
  * - Con REGISTRATIONS_OPEN=true sono pubbliche (senza autenticazione) solo le rotte
@@ -53,8 +54,9 @@ function isAdminPath(pathname: string): boolean {
     || pathname.startsWith('/api/admin/');
 }
 
+/** Sempre raggiungibili, anche a registrazioni chiuse: informativa e disiscrizione dalle email. */
 function isPrivacyPath(pathname: string): boolean {
-  return pathname === '/privacy';
+  return pathname === '/privacy' || pathname === '/unsubscribe';
 }
 
 /** Rotte raggiungibili senza credenziali quando le registrazioni sono aperte. */

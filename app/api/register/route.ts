@@ -5,6 +5,7 @@ import { registrationSchema } from '@/lib/validation';
 import { Guest, sendEmail } from '@/lib/notifications';
 import { EVENT, ticketUrl } from '@/lib/event';
 import { PUBLIC_CORS_ROUTES, corsHeaders, preflightResponse } from '@/lib/cors';
+import { trackMetaEvent } from '@/lib/meta-capi';
 
 export const dynamic = 'force-dynamic';
 
@@ -44,6 +45,11 @@ function makeCode() {
   return `${EVENT.codePrefix}${randomBytes(4).toString('hex').toUpperCase()}`;
 }
 
+/** Identificativo dell'evento di registrazione: lo stesso va passato al pixel del browser (deduplica). */
+function makeEventId(registrationCode: string) {
+  return `reg-${registrationCode}`;
+}
+
 function json(req: NextRequest, body: unknown, status: number, extraHeaders: Record<string, string> = {}) {
   return NextResponse.json(body, {
     status,
@@ -72,7 +78,8 @@ export async function POST(req: NextRequest) {
   const honeypot = body && typeof body === 'object' ? (body as Record<string, unknown>).website : undefined;
   if (typeof honeypot === 'string' && honeypot.trim() !== '') {
     const qrToken = randomUUID();
-    return json(req, { registrationCode: makeCode(), qrToken, ticketUrl: ticketUrl(qrToken) }, 201);
+    const fakeCode = makeCode();
+    return json(req, { registrationCode: fakeCode, qrToken, ticketUrl: ticketUrl(qrToken), eventId: makeEventId(fakeCode) }, 201);
   }
 
   try {
@@ -154,6 +161,7 @@ export async function POST(req: NextRequest) {
         registrationId,
         registrationCode,
         qrToken: insert.rows[0].qr_token,
+        partySize,
         guest: {
           firstName: d.firstName,
           lastName: d.lastName,
@@ -188,10 +196,37 @@ export async function POST(req: NextRequest) {
       ).catch(queueError => console.error('Unable to record the email failure', queueError));
     }
 
+    const eventId = makeEventId(result.registrationCode);
+
+    // Meta Conversions API: solo con consenso marketing (e solo se il token è configurato).
+    // Parte dopo la risposta e non può farla fallire. Senza consenso non viene inviato nulla.
+    if (d.marketingConsent) {
+      trackMetaEvent(result.registrationId, {
+        eventName: 'CompleteRegistration',
+        eventId,
+        actionSource: 'website',
+        eventSourceUrl: d.eventSourceUrl || EVENT.publicPageUrl,
+        user: { email: result.guest.email, phone: d.phone, firstName: d.firstName, lastName: d.lastName },
+        clientIp: clientIp(req),
+        userAgent: req.headers.get('user-agent') || undefined,
+        fbp: d.fbp,
+        fbc: d.fbc,
+        customData: {
+          content_name: 'christmas_village_2026',
+          event_day: result.guest.eventDate,
+          slot: result.guest.startTime.slice(0, 5),
+          party_size: result.partySize,
+          // "Caldo" = ha indicato un evento da organizzare (tipologia, data o numero di ospiti).
+          lead_hot: d.eventType !== EVENT.defaultEventType || Boolean(d.plannedEventDate) || d.guestCount !== undefined,
+        },
+      });
+    }
+
     return json(req, {
       registrationCode: result.registrationCode,
       qrToken: result.qrToken,
       ticketUrl: ticketUrl(result.qrToken),
+      eventId,
     }, 201);
   } catch (error) {
     if (error instanceof Error && error.message === 'SLOT_FULL') {

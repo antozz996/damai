@@ -1,0 +1,15 @@
+.campaign-section{margin-top:36px}
+.campaign-section h2{margin-bottom:10px}
+.campaign-muted{font-size:14px;color:#6b625a;max-width:820px}
+.campaign-note{margin:14px 0;max-width:820px}
+.campaign-preview{display:block;width:100%;max-width:680px;height:760px;border:1px solid #d7d0c8;background:#1a0307}
+.campaign-text{margin-top:14px;max-width:680px}
+.campaign-text summary{cursor:pointer;font-size:14px}
+.campaign-text pre{white-space:pre-wrap;font-size:13px;line-height:1.55;background:#fff;border:1px solid #ddd7ce;padding:18px;color:#2f261e}
+.campaign-form{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;max-width:680px;margin:14px 0}
+.campaign-form label{display:grid;gap:7px;font-size:12px;color:#5f574f;flex:1 1 260px}
+.campaign-form input{font:inherit;font-size:15px;padding:12px;border:1px solid #d7d0c8;background:#fff;color:#2f261e}
+.campaign-form .submit{flex:0 0 auto;width:auto}
+.campaign-form .submit:disabled{opacity:.45;cursor:not-allowed}
+.campaign-options{display:grid;gap:8px;margin:10px 0 14px;font-size:14px}
+.campaign-excluded td{color:#9a9087}

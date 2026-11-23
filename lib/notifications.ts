@@ -265,6 +265,190 @@ export async function sendEmail(type: CommunicationType, guest: Guest, options: 
   return { sent:true, providerId:String(data.id || '') };
 }
 
+/* ------------------------------------------------------------------ *
+ * Invito al Christmas Village per i contatti de La Dolce Vita · Open Days.
+ * Comunicazione promozionale inviata UNA sola volta (art. 130 c. 4 Codice privacy):
+ * mittente riconoscibile, motivo della ricezione e disiscrizione ben visibile.
+ * Non parte mai da sola: la invia lo staff da /admin/campaigns/ldv-natale.
+ * ------------------------------------------------------------------ */
+export const LDV_INVITE_SUBJECT = 'Ti aspettiamo al Damai Christmas Village · 12 e 13 dicembre';
+export const LDV_INVITE_SUBJECT_ALT = 'Dopo La Dolce Vita, il Natale al Damai: 12 e 13 dicembre, ingresso gratuito';
+const LDV_CONTROLLER = 'Fiordacqua S.r.l., Vicoletto dei Cinesi 56, 80136 Napoli (NA), P.IVA 10239921215';
+
+type LdvInvite = {
+  firstName: string;
+  /** true se risulta entrato agli Open Days; false se si era solo registrato. */
+  attended: boolean;
+  unsubscribeUrl: string;
+};
+
+/** Oggetto in uso: quello predefinito, oppure LDV_CAMPAIGN_SUBJECT se impostato. */
+export function ldvInviteSubject(): string {
+  return (process.env.LDV_CAMPAIGN_SUBJECT || '').trim() || LDV_INVITE_SUBJECT;
+}
+
+export function ldvInviteRegisterUrl(): string {
+  const page = EVENT.publicPageUrl;
+  return `${page}${page.includes('?') ? '&' : '?'}utm_source=email&utm_medium=email&utm_campaign=dcv26-ldv`;
+}
+
+/** Oggetto, HTML e versione testo dell'invito (nessun invio). */
+export function renderLdvInvite(invite: LdvInvite) {
+  const subject = ldvInviteSubject();
+  const name = invite.firstName.trim();
+  const greeting = name ? `Ciao ${name},` : 'Ciao,';
+  const recall = invite.attended
+    ? 'hai partecipato a La Dolce Vita · Open Days al Damai Event Garden'
+    : 'hai prenotato la tua visita a La Dolce Vita · Open Days al Damai Event Garden';
+  const intro = `${recall}: per questo ci fa piacere invitarti al nostro prossimo appuntamento, il ${EVENT.name}.`;
+  const body = `Sabato 12 e domenica 13 dicembre 2026, ${EVENT.hoursLabel}, il giardino del Damai diventa un villaggio di Natale: Babbo Natale, il laboratorio con la letterina e la foto, i mercatini, bevande tipiche e delizie natalizie.`;
+  const seats = `L’ingresso è gratuito, su registrazione. I posti sono limitati: ${EVENT.slotCapacity} persone per ogni fascia oraria, con ${EVENT.visitMinutes} minuti di visita. Scegli il giorno e l’orario che preferisci.`;
+  const why = 'Ricevi questa email perché hai partecipato o ti sei registrato agli Open Days «La Dolce Vita» di Damai Event Garden e in quell’occasione ci hai lasciato questo indirizzo. È un invito a un evento analogo, inviato una sola volta.';
+  const preheader = 'Sabato 12 e domenica 13 dicembre: ingresso gratuito su registrazione, posti limitati per fascia.';
+  const registerUrl = ldvInviteRegisterUrl();
+  const privacyUrl = `${baseUrl()}/privacy`;
+
+  const text = [
+    greeting,
+    '',
+    intro,
+    '',
+    body,
+    '',
+    seats,
+    '',
+    `Registrati: ${registerUrl}`,
+    '',
+    `${EVENT.venue} · ${EVENT.address}`,
+    '',
+    '--',
+    why,
+    `Titolare del trattamento: ${LDV_CONTROLLER}. Informativa privacy: ${privacyUrl}`,
+    `Non vuoi ricevere altre comunicazioni promozionali? Disiscriviti qui: ${invite.unsubscribeUrl}`,
+  ].join('\n');
+
+  const imageBase = baseUrl();
+  const label = `font-family:${SERIF};font-size:11px;line-height:1.4;letter-spacing:2px;text-transform:uppercase;color:${BRAND.gold};`;
+  const paragraph = `margin:0 0 16px;font-family:${SERIF};font-size:17px;line-height:1.65;color:${BRAND.cream};`;
+  const detail = (key: string, value: string, last = false) => `<tr><td width="34%" valign="top" style="padding:13px 10px 13px 0;${last ? '' : `border-bottom:1px solid ${BRAND.line};`}${label}">${key}</td><td valign="top" style="padding:13px 0;${last ? '' : `border-bottom:1px solid ${BRAND.line};`}font-family:${SERIF};font-size:16px;line-height:1.45;color:${BRAND.cream};">${value}</td></tr>`;
+  const rule = `<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center"><tr><td width="72" height="1" bgcolor="${BRAND.gold}" style="width:72px;height:1px;font-size:0;line-height:0;background:${BRAND.gold};">&nbsp;</td></tr></table>`;
+  const link = escapeHtml(registerUrl);
+  const unsubscribe = escapeHtml(invite.unsubscribeUrl);
+
+  const html = `<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="dark">
+    <meta name="supported-color-schemes" content="dark">
+    <title>${escapeHtml(subject)}</title>
+    <style>
+      @media only screen and (max-width: 640px) {
+        .email-shell { width: 100% !important; }
+        .email-pad { padding-left: 22px !important; padding-right: 22px !important; }
+        .email-title { font-size: 28px !important; }
+        .email-logo { width: 230px !important; }
+      }
+    </style>
+  </head>
+  <body bgcolor="${BRAND.night}" style="margin:0;padding:0;background:${BRAND.night};color:${BRAND.cream};font-family:${SERIF};-webkit-text-size-adjust:100%;">
+    <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">${escapeHtml(preheader)}</div>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${BRAND.night}" style="background:${BRAND.night};">
+      <tr>
+        <td align="center" style="padding:24px 10px;">
+          <table role="presentation" class="email-shell" width="600" cellpadding="0" cellspacing="0" border="0" bgcolor="${BRAND.bordeaux}" style="width:100%;max-width:600px;background:${BRAND.bordeaux};border:1px solid ${BRAND.gold};">
+            <tr>
+              <td class="email-pad" align="center" style="padding:34px 48px 0;">
+                <img src="${imageBase}/email/dcv-monogramma.png" width="60" height="115" alt="" style="display:block;width:60px;height:115px;margin:0 auto;border:0;">
+                <img class="email-logo" src="${imageBase}/email/dcv-logo.png" width="280" height="103" alt="Damai Christmas Village" style="display:block;width:280px;max-width:100%;height:auto;margin:14px auto 0;border:0;font-family:${SERIF};font-size:24px;color:${BRAND.gold};">
+                <div style="margin-top:14px;${label}">12 e 13 dicembre 2026 &middot; Ingresso gratuito</div>
+              </td>
+            </tr>
+            <tr>
+              <td class="email-pad" align="center" style="padding:30px 48px 0;">
+                ${rule}
+                <div style="margin-top:26px;${label}">Un invito da Damai Event Garden</div>
+                <h1 class="email-title" style="margin:14px 0 18px;font-family:${SERIF};font-size:34px;line-height:1.18;font-weight:normal;color:${BRAND.cream};">Dopo La Dolce Vita, ti aspettiamo al Christmas Village</h1>
+                <p style="${paragraph}">${escapeHtml(greeting)}<br>${escapeHtml(intro)}</p>
+                <p style="${paragraph}">${escapeHtml(body)}</p>
+                <p style="${paragraph}margin-bottom:0;">${escapeHtml(seats)}</p>
+              </td>
+            </tr>
+            <tr>
+              <td class="email-pad" style="padding:26px 48px 0;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-top:1px solid ${BRAND.line};border-bottom:1px solid ${BRAND.line};">
+                  ${detail('Quando', `Sabato 12 e domenica 13 dicembre 2026<br>${escapeHtml(EVENT.hoursLabel)}, ${escapeHtml(EVENT.lastEntryLabel)}`)}
+                  ${detail('Ingresso', 'Gratuito, su registrazione')}
+                  ${detail('Posti', `${EVENT.slotCapacity} persone per fascia oraria`)}
+                  ${detail('Dove', `${escapeHtml(EVENT.venue)}<br>${escapeHtml(EVENT.address)}`, true)}
+                </table>
+              </td>
+            </tr>
+            <tr>
+              <td class="email-pad" align="center" style="padding:32px 48px 0;">
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center">
+                  <tr>
+                    <td align="center" bgcolor="${BRAND.gold}" style="background:${BRAND.gold};">
+                      <a href="${link}" style="display:inline-block;padding:17px 34px;font-family:${SERIF};font-size:14px;line-height:1.2;letter-spacing:2px;text-transform:uppercase;font-weight:bold;color:${BRAND.night};text-decoration:none;">Registrati</a>
+                    </td>
+                  </tr>
+                </table>
+                <p style="margin:16px 0 0;font-family:${SERIF};font-size:12px;line-height:1.5;color:${BRAND.soft};">Se il pulsante non funziona, apri questo indirizzo:<br><a href="${link}" style="color:${BRAND.gold};text-decoration:underline;word-break:break-all;">${link}</a></p>
+              </td>
+            </tr>
+            <tr>
+              <td class="email-pad" align="center" style="padding:34px 48px 36px;">
+                ${rule}
+                <p style="margin:22px 0 0;font-family:${SERIF};font-size:13px;line-height:1.6;color:${BRAND.soft};">${escapeHtml(why)}</p>
+                <p style="margin:12px 0 0;font-family:${SERIF};font-size:12px;line-height:1.6;color:${BRAND.soft};">Titolare del trattamento: ${escapeHtml(LDV_CONTROLLER)}. <a href="${escapeHtml(privacyUrl)}" style="color:${BRAND.gold};text-decoration:underline;">Informativa privacy</a></p>
+                <p style="margin:18px 0 0;font-family:${SERIF};font-size:15px;line-height:1.6;color:${BRAND.cream};">Non vuoi ricevere altre comunicazioni promozionali?<br><a href="${unsubscribe}" style="color:${BRAND.gold};text-decoration:underline;font-weight:bold;">Disiscriviti con un clic</a></p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>`;
+
+  return { subject, html, text };
+}
+
+/**
+ * Invio dell'invito a un indirizzo. Con `List-Unsubscribe` e `List-Unsubscribe-Post`
+ * i client di posta mostrano il pulsante di disiscrizione (POST one-click su /unsubscribe).
+ */
+export async function sendLdvInvite(to: string, invite: LdvInvite, options: { idempotencyKey: string; subjectPrefix?: string }) {
+  const apiKey = process.env.RESEND_API_KEY;
+  const from = process.env.EMAIL_FROM;
+  if (!apiKey || !from || !baseUrl()) return { sent: false as const, reason: 'email_not_configured' };
+  const { subject, html, text } = renderLdvInvite(invite);
+  const response = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+      'Idempotency-Key': options.idempotencyKey,
+    },
+    body: JSON.stringify({
+      from,
+      to: [to],
+      ...(process.env.EMAIL_REPLY_TO ? { reply_to: process.env.EMAIL_REPLY_TO } : {}),
+      subject: `${options.subjectPrefix || ''}${subject}`,
+      html,
+      text,
+      headers: {
+        'List-Unsubscribe': `<${invite.unsubscribeUrl}>`,
+        'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+      },
+    }),
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(`Resend ${response.status}: ${JSON.stringify(data)}`);
+  return { sent: true as const, providerId: String(data.id || '') };
+}
+
 function normalizeWhatsApp(phone: string) {
   let digits = phone.replace(/\D/g,'');
   if (digits.startsWith('00')) digits = digits.slice(2);
