@@ -133,6 +133,8 @@ export function proxy(request: NextRequest) {
 
   if (isAdminPath(pathname)) return requireAdmin(request);
   if (isPrivacyPath(pathname)) return NextResponse.next();
+  // Form contatti del sito damaigarden.it: sempre pubblico, indipendente dall'evento.
+  if (pathname === '/api/contact') return NextResponse.next();
 
   if (!EVENT.openRegistrations) return closedResponse(request, pathname);
 
