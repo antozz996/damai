@@ -125,6 +125,11 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   // Edizioni concluse: dashboard d'archivio in sola lettura, con gli stati di quell'edizione.
   if (!edition.current) return <ArchiveDashboard edition={edition} />;
 
+  // Richieste dal form di damaigarden.it ancora da contattare (link nell'intestazione).
+  const newContactRequests = await query<{ n: number }>(`SELECT count(*)::int AS n FROM contact_requests WHERE status = 'new'`)
+    .then(r => r.rows[0]?.n ?? 0)
+    .catch(() => 0);
+
 // Capienza: contano le registrazioni attive (registrate + già entrate).
   const statsResult = await query<Stats>(`
     SELECT
@@ -187,6 +192,9 @@ const s = statsResult.rows[0] ?? {
             <p className="admin-intro">{EVENT.datesLabel}, {EVENT.hoursLabel}. Il centro di comando per ospiti, fasce orarie, QR ed email.</p>
           </div>
           <div className="admin-header-actions">
+            <a className="admin-public-link" href="/admin/richieste">
+              Richieste dal sito{newContactRequests > 0 ? ` (${newContactRequests} da contattare)` : ''} →
+            </a>
             <a className="admin-public-link" href={EVENT.publicPageUrl} target="_blank" rel="noreferrer">
               Pagina pubblica ↗
             </a>
