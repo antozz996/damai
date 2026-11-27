@@ -135,6 +135,8 @@ export function proxy(request: NextRequest) {
   if (isPrivacyPath(pathname)) return NextResponse.next();
   // Form contatti del sito damaigarden.it: sempre pubblico, indipendente dall'evento.
   if (pathname === '/api/contact') return NextResponse.next();
+  // Registro dei consensi del banner cookie del sito: sempre pubblico (audit LP-03).
+  if (pathname === '/api/consent-log') return NextResponse.next();
 
   if (!EVENT.openRegistrations) return closedResponse(request, pathname);
 

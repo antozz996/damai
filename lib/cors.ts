@@ -5,6 +5,7 @@ export const PUBLIC_CORS_ROUTES: Record<string, string> = {
   '/api/slots': 'GET, OPTIONS',
   '/api/register': 'POST, OPTIONS',
   '/api/contact': 'POST, OPTIONS',
+  '/api/consent-log': 'POST, OPTIONS',
 };
 
 export function allowedOrigins(): string[] {

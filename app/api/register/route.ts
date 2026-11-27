@@ -90,6 +90,7 @@ export async function POST(req: NextRequest) {
     }
 
     const d = parsed.data;
+    const adsConsent = d.adsConsent ?? d.marketingConsent;
     const result = await transaction(async client => {
       // Lock della fascia: serializza le registrazioni concorrenti sullo stesso orario.
       const slot = await client.query<{ id:string; capacity:number; event_date:string; start_time:string }>(
@@ -137,7 +138,11 @@ export async function POST(req: NextRequest) {
       const registrationId = insert.rows[0].id;
       await client.query(
         `INSERT INTO registration_events (registration_id, event_type, metadata) VALUES ($1,'registered',$2::jsonb)`,
-        [registrationId, JSON.stringify({ partySize, children: d.children, existingBookingVenue: d.existingBookingVenue ?? null })]
+        [registrationId, JSON.stringify({
+          partySize, children: d.children, existingBookingVenue: d.existingBookingVenue ?? null,
+          // Prova dei due consensi facoltativi (comunicazioni / annunci Meta), separati dal 27/11/2026.
+          consents: { marketing: d.marketingConsent, ads: adsConsent, separated: d.adsConsent !== undefined },
+        })]
       );
 
       // Conferma immediata + promemoria 24 ore prima (solo se quel momento non è già passato).
@@ -198,9 +203,9 @@ export async function POST(req: NextRequest) {
 
     const eventId = makeEventId(result.registrationCode);
 
-    // Meta Conversions API: solo con consenso marketing (e solo se il token è configurato).
+    // Meta Conversions API: solo con il consenso agli annunci personalizzati (e solo se il token è configurato).
     // Parte dopo la risposta e non può farla fallire. Senza consenso non viene inviato nulla.
-    if (d.marketingConsent) {
+    if (adsConsent) {
       trackMetaEvent(result.registrationId, {
         eventName: 'CompleteRegistration',
         eventId,

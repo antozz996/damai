@@ -41,6 +41,9 @@ export const registrationSchema = z.object({
   notes: optionalText(1000),
   privacyConsent: z.literal(true),
   marketingConsent: z.preprocess(emptyToUndefined, z.boolean().default(false)),
+  // Consenso separato agli annunci personalizzati Meta (audit LP-06). Assente nei client
+  // vecchi, che chiedevano un consenso unico: in quel caso vale marketingConsent.
+  adsConsent: z.preprocess(emptyToUndefined, z.boolean().optional()),
   utmSource: optionalText(100),
   utmMedium: optionalText(100),
   utmCampaign: optionalText(120),

@@ -117,3 +117,17 @@ CROSS JOIN generate_series(
   timestamp '2026-12-12 16:00', timestamp '2026-12-12 21:00', interval '30 minutes'
 ) AS t
 ON CONFLICT (edition, event_date, start_time) DO NOTHING;
+
+-- Registro delle scelte del banner cookie di damaigarden.it (migrazione 20261127_consent_log.sql).
+CREATE TABLE IF NOT EXISTS consent_log (
+  id bigserial PRIMARY KEY,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  consent_id uuid NOT NULL,
+  version integer NOT NULL,
+  analytics boolean NOT NULL,
+  marketing boolean NOT NULL,
+  page text,
+  locale text
+);
+CREATE INDEX IF NOT EXISTS consent_log_consent_id_idx ON consent_log (consent_id);
+CREATE INDEX IF NOT EXISTS consent_log_created_at_idx ON consent_log (created_at DESC);
